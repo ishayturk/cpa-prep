@@ -57,7 +57,7 @@ st.markdown(
   /* Pull the entire page content to the top */
   .block-container {
     padding-top: 0rem !important;
-    margin-top: -20px !important;
+    margin-top: -10px !important;
   }
 
   .wrap {
