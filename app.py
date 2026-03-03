@@ -1,71 +1,91 @@
-# File: app.py | Date & Time: 2026-03-03 22:31 (Asia/Jerusalem) | Version: CPA06
+# File: app.py | Date & Time: 2026-03-03 23:18 (Asia/Jerusalem) | Version: CPA07
 
 import streamlit as st
 import smtplib
 import time
 import random
 from email.mime.text import MIMEText
+from PIL import Image
 
 # -------------------------
-# Page config
+# Page config (uses favicon.ico from repo root)
 # -------------------------
+icon = Image.open("favicon.ico")
+
 st.set_page_config(
     page_title="רואה חשבון בקליק",
-    page_icon="favicon.png",  # favicon.png ברוט של הריפו
+    page_icon=icon,
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
 # -------------------------
-# CSS: RTL, clean, hide Streamlit chrome, center only logo, white inputs
+# Global CSS – clean, RTL, hide Streamlit chrome
 # -------------------------
 st.markdown(
     """
 <style>
-  * { direction: rtl; text-align: right; }
+    * { direction: rtl; text-align: right; }
 
-  /* Hide Streamlit chrome (top stuff) */
-  header { visibility: hidden; height: 0; }
-  #MainMenu { visibility: hidden; }
-  footer { visibility: hidden; }
-  .stDeployButton { display:none !important; }
+    /* Hide Streamlit top chrome */
+    header { visibility: hidden; height: 0; }
+    #MainMenu { visibility: hidden; }
+    footer { visibility: hidden; }
+    .stDeployButton { display:none !important; }
 
-  /* Keep background white */
-  html, body, .stApp, .block-container { background: #ffffff !important; }
+    html, body, .stApp, .block-container {
+        background: #ffffff !important;
+    }
 
-  /* Inputs: remove gray background + remove wrapper shadows */
-  div[data-testid="stTextInput"] input {
-      background: #ffffff !important;
-      border: 1px solid #000 !important;
-      border-radius: 8px !important;
-      padding: 10px !important;
-      font-size: 1rem !important;
-      max-width: 420px !important;
-      box-shadow: none !important;
-  }
-  div[data-testid="stTextInput"],
-  div[data-testid="stTextInput"] > div,
-  div[data-testid="stTextInput"] > div > div {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-  }
-  div[data-testid="stTextInput"] label { display: none !important; }
+    /* Inputs – no gray background */
+    div[data-testid="stTextInput"] input {
+        background: #ffffff !important;
+        border: 1px solid #000 !important;
+        border-radius: 8px !important;
+        padding: 10px !important;
+        font-size: 1rem !important;
+        max-width: 420px !important;
+        box-shadow: none !important;
+    }
 
-  /* Buttons */
-  .stButton>button, div[data-testid="stFormSubmitButton"]>button {
-      width: 100% !important;
-      border-radius: 8px !important;
-      font-weight: 800 !important;
-      height: 3em !important;
-      max-width: 420px !important;
-  }
+    div[data-testid="stTextInput"],
+    div[data-testid="stTextInput"] > div,
+    div[data-testid="stTextInput"] > div > div {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
 
-  /* Center ONLY the logo */
-  .logo-wrap { display:flex; justify-content:center; align-items:center; margin: 8px 0 14px 0; }
+    div[data-testid="stTextInput"] label {
+        display: none !important;
+    }
 
-  /* Small helper text */
-  .hint { color:#666; font-size:0.95rem; margin: 6px 0 10px 0; max-width:420px; }
+    /* Buttons */
+    .stButton>button,
+    div[data-testid="stFormSubmitButton"]>button {
+        width: 100% !important;
+        border-radius: 8px !important;
+        font-weight: 800 !important;
+        height: 3em !important;
+        max-width: 420px !important;
+    }
+
+    /* Centered logo block (isolated from RTL) */
+    .logo-center {
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        direction:ltr;
+        margin-top:-70px;
+        margin-bottom:30px;
+    }
+
+    .hint {
+        color:#666;
+        font-size:0.95rem;
+        margin: 6px 0 10px 0;
+        max-width:420px;
+    }
 </style>
 """,
     unsafe_allow_html=True,
@@ -114,7 +134,7 @@ def reset_login_flow():
 
 
 # -------------------------
-# State init
+# State
 # -------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -122,7 +142,6 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# Always route
 if not st.session_state.logged_in:
     st.session_state.page = "login"
 
@@ -131,25 +150,22 @@ if not st.session_state.logged_in:
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
-    # No memory on arriving to login (fresh): if not in OTP stage -> wipe inputs/history
-    if not st.session_state.get("otp_sent", False):
-        for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email", "login_name", "login_email", "otp_input"]:
-            if k in st.session_state:
-                del st.session_state[k]
 
-    # Logo centered only
-    st.markdown('<div class="logo-wrap">', unsafe_allow_html=True)
+    if not st.session_state.get("otp_sent", False):
+        reset_login_flow()
+
+    # Logo centered and high
+    st.markdown('<div class="logo-center">', unsafe_allow_html=True)
     st.image("logo.png", width=320)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Keep content right-aligned but not centered layout-wide
-    right_col, _ = st.columns([1.2, 2.8], gap="large")
+    # Right-side form column
+    spacer, form_col = st.columns([3, 1.3])
 
-    with right_col:
+    with form_col:
         otp_sent = st.session_state.get("otp_sent", False)
 
         if not otp_sent:
-            # Use form to eliminate "press enter to apply" behavior
             with st.form("login_form", clear_on_submit=False, border=False):
                 name = st.text_input(
                     "שם",
@@ -176,8 +192,10 @@ if st.session_state.page == "login":
                 if email and not valid_email:
                     st.caption("יש להזין כתובת מייל תקינה")
 
-                # Text directly ABOVE the button (as requested)
-                st.markdown('<div class="hint">להשלמת הכניסה קוד יישלח לכתובת המייל שהכנסת</div>', unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="hint">להשלמת הכניסה קוד יישלח לכתובת המייל שהכנסת</div>',
+                    unsafe_allow_html=True,
+                )
 
                 submitted = st.form_submit_button("שלח קוד")
 
@@ -248,8 +266,8 @@ if st.session_state.page == "login":
 # WELCOME PAGE
 # -------------------------
 elif st.session_state.page == "welcome":
-    right_col, _ = st.columns([1.2, 2.8], gap="large")
-    with right_col:
+    spacer, content = st.columns([3, 1.3])
+    with content:
         user_name = st.session_state.get("user_name", "משתמש")
         st.markdown(f"### ברוכים הבאים, {user_name} 👋")
         st.write("ברוכים הבאים למערכת הכנה לבחינת לשכת רואי החשבון")
@@ -257,9 +275,8 @@ elif st.session_state.page == "welcome":
         if st.button("יציאה"):
             st.session_state.logged_in = False
             st.session_state.page = "login"
-            for k in ["user_name"]:
-                if k in st.session_state:
-                    del st.session_state[k]
+            if "user_name" in st.session_state:
+                del st.session_state["user_name"]
             reset_login_flow()
             st.rerun()
 
