@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA23
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA24
 
 import streamlit as st
 import smtplib
@@ -332,19 +332,27 @@ elif st.session_state.page == "study":
     """, unsafe_allow_html=True)
 
     st.markdown("### 📚 שיעורי לימוד")
-    st.markdown("בחר נושא:")
 
-    for topic in SYLLABUS:
-        if st.button(topic, key=f"topic_{topic}"):
-            st.session_state.selected_topic = topic
-            st.session_state.page = "subtopic"
-            st.rerun()
+    selected_topic = st.selectbox("בחר נושא:", ["בחר..."] + list(SYLLABUS.keys()),
+                                   label_visibility="collapsed")
+
+    if selected_topic and selected_topic != "בחר...":
+        st.markdown("#### בחר תת נושא ללימוד:")
+        subs = SYLLABUS[selected_topic]
+        cols = st.columns(len(subs))
+        for i, sub in enumerate(subs):
+            with cols[i]:
+                if st.button(sub, key=f"sub_{sub}"):
+                    st.session_state.selected_topic = selected_topic
+                    st.session_state.selected_sub = sub
+                    st.session_state.page = "lesson"
+                    st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 # -------------------------
-# SUBTOPIC PAGE (בחירת תת נושא)
+# SUBTOPIC PAGE (בחירת תת נושא) - kept for backwards compat
 # -------------------------
 elif st.session_state.page == "subtopic":
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
