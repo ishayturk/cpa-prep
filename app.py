@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA09
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA12
 
 import streamlit as st
 import smtplib
@@ -41,7 +41,7 @@ logo_tag = (
 )
 
 # -------------------------
-# CSS
+# CSS (RTL global, but logo block is isolated)
 # -------------------------
 st.markdown(
     """
@@ -54,23 +54,30 @@ st.markdown(
   section[data-testid="stSidebar"] { display: none !important; }
   button[kind="header"] { display: none !important; }
 
+  /* Pull the entire page content to the top */
+  .block-container {
+    padding-top: 0rem !important;
+    margin-top: -10px !important;
+  }
+
   .wrap {
     max-width: 520px;
     margin: 0 auto;
-    padding-top: 6px;
+    padding-top: 0px;
   }
 
+  /* Logo: קטן, צמוד שמאל */
   .logo-wrap {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     direction: ltr;
-    margin-top: -40px;
-    margin-bottom: 12px;
+    margin-top: 0px;
+    margin-bottom: 4px;
   }
   .logo-wrap img {
-    width: 320px;
-    max-width: 86vw;
+    width: 160px;
+    max-width: 45vw;
     height: auto;
     display: block;
   }
@@ -91,6 +98,7 @@ st.markdown(
   }
   div[data-testid="stTextInput"] label { display: none !important; }
 
+  /* Buttons */
   .stButton>button {
     width: 100% !important;
     border-radius: 10px !important;
@@ -141,7 +149,14 @@ def clear_login_inputs_only():
 
 
 def reset_login_flow(full: bool = True):
-    keys = ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]
+    keys = [
+        "otp_sent",
+        "otp_code",
+        "otp_time",
+        "otp_attempts",
+        "pending_name",
+        "pending_email",
+    ]
     if full:
         keys += ["logged_in", "user_name"]
     for k in keys:
