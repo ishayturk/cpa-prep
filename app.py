@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA11
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA12
 
 import streamlit as st
 import smtplib
@@ -57,7 +57,7 @@ st.markdown(
   /* Pull the entire page content to the top */
   .block-container {
     padding-top: 0rem !important;
-    margin-top: -80px !important;
+    margin-top: -40px !important;
   }
 
   .wrap {
