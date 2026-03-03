@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA21
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA22
 
 import streamlit as st
 import smtplib
@@ -146,6 +146,17 @@ def reset_login_flow(full: bool = True):
         if k in st.session_state:
             del st.session_state[k]
 
+
+# -------------------------
+# Syllabus
+# -------------------------
+SYLLABUS = {
+    "חשבונאות פיננסית": ["הכנת דוחות כספיים", "תקני דיווח בינלאומיים (IFRS)", "מאזנים ומכשירי הון"],
+    "ביקורת": ["עקרונות הביקורת", "ביקורת פנימית וחיצונית", "דוחות המבקר"],
+    "מיסוי": ["מס הכנסה", "מיסוי מקרקעין", "מע\"מ ומיסוי בינלאומי"],
+    "משפט": ["דיני תאגידים", "דיני חוזים", "דיני ניירות ערך"],
+    "כלכלה וניהול פיננסי": ["ניתוח דוחות", "הערכות שווי", "ניהול סיכונים"],
+}
 
 # -------------------------
 # State init
@@ -300,6 +311,62 @@ elif st.session_state.page == "welcome":
             st.session_state.page = "login"
             reset_login_flow(full=False)
             clear_login_inputs_only()
+            st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# -------------------------
+# STUDY PAGE (בחירת נושא)
+# -------------------------
+elif st.session_state.page == "study":
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
+
+    user_name = st.session_state.get("user_name", "משתמש")
+    st.markdown(f"""
+        <div style="display:flex; align-items:center; justify-content:flex-end;
+                    gap:8px; margin-bottom:20px;">
+            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
+            <span style="font-size:1.5rem;">👤</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("### 📚 שיעורי לימוד")
+    st.markdown("<div style='margin-bottom:16px;'>בחר נושא:</div>", unsafe_allow_html=True)
+
+    for topic in SYLLABUS:
+        if st.button(topic, key=f"topic_{topic}"):
+            st.session_state.selected_topic = topic
+            st.session_state.page = "subtopic"
+            st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# -------------------------
+# SUBTOPIC PAGE (בחירת תת נושא)
+# -------------------------
+elif st.session_state.page == "subtopic":
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
+
+    user_name = st.session_state.get("user_name", "משתמש")
+    st.markdown(f"""
+        <div style="display:flex; align-items:center; justify-content:flex-end;
+                    gap:8px; margin-bottom:20px;">
+            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
+            <span style="font-size:1.5rem;">👤</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    topic = st.session_state.get("selected_topic", "")
+    st.markdown(f"### 📖 {topic}")
+    st.markdown("<div style='margin-bottom:16px;'>בחר תת נושא ללימוד:</div>", unsafe_allow_html=True)
+
+    for sub in SYLLABUS.get(topic, []):
+        if st.button(sub, key=f"sub_{sub}"):
+            st.session_state.selected_sub = sub
+            st.session_state.page = "lesson"
             st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
