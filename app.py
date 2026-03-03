@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA12
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA15
 
 import streamlit as st
 import smtplib
@@ -41,7 +41,7 @@ logo_tag = (
 )
 
 # -------------------------
-# CSS (RTL global, but logo block is isolated)
+# CSS
 # -------------------------
 st.markdown(
     """
@@ -54,7 +54,6 @@ st.markdown(
   section[data-testid="stSidebar"] { display: none !important; }
   button[kind="header"] { display: none !important; }
 
-  /* Pull the entire page content to the top */
   .block-container {
     padding-top: 0rem !important;
     margin-top: -10px !important;
@@ -66,7 +65,6 @@ st.markdown(
     padding-top: 0px;
   }
 
-  /* Logo: קטן, צמוד שמאל */
   .logo-wrap {
     display: flex;
     justify-content: flex-start;
@@ -98,7 +96,6 @@ st.markdown(
   }
   div[data-testid="stTextInput"] label { display: none !important; }
 
-  /* Buttons */
   .stButton>button {
     width: 100% !important;
     border-radius: 10px !important;
@@ -149,14 +146,7 @@ def clear_login_inputs_only():
 
 
 def reset_login_flow(full: bool = True):
-    keys = [
-        "otp_sent",
-        "otp_code",
-        "otp_time",
-        "otp_attempts",
-        "pending_name",
-        "pending_email",
-    ]
+    keys = ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]
     if full:
         keys += ["logged_in", "user_name"]
     for k in keys:
