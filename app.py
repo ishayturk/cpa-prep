@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:18 (Asia/Jerusalem) | Version: CPA07
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA08
 
 import streamlit as st
 import smtplib
@@ -8,84 +8,81 @@ from email.mime.text import MIMEText
 from PIL import Image
 
 # -------------------------
-# Page config (uses favicon.ico from repo root)
+# Page config
 # -------------------------
-icon = Image.open("favicon.ico")
+try:
+    icon = Image.open("favicon.ico")
+except Exception:
+    icon = "✅"
 
 st.set_page_config(
     page_title="רואה חשבון בקליק",
     page_icon=icon,
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed",
 )
 
 # -------------------------
-# Global CSS – clean, RTL, hide Streamlit chrome
+# CSS (RTL global, but logo block is isolated)
 # -------------------------
 st.markdown(
     """
 <style>
-    * { direction: rtl; text-align: right; }
+  * { direction: rtl; text-align: right; }
 
-    /* Hide Streamlit top chrome */
-    header { visibility: hidden; height: 0; }
-    #MainMenu { visibility: hidden; }
-    footer { visibility: hidden; }
-    .stDeployButton { display:none !important; }
+  html, body, .stApp, .block-container { background: #ffffff !important; }
 
-    html, body, .stApp, .block-container {
-        background: #ffffff !important;
-    }
+  header, #MainMenu, footer { visibility: hidden; height: 0; }
+  section[data-testid="stSidebar"] { display: none !important; }
+  button[kind="header"] { display: none !important; }
 
-    /* Inputs – no gray background */
-    div[data-testid="stTextInput"] input {
-        background: #ffffff !important;
-        border: 1px solid #000 !important;
-        border-radius: 8px !important;
-        padding: 10px !important;
-        font-size: 1rem !important;
-        max-width: 420px !important;
-        box-shadow: none !important;
-    }
+  /* Wrapper keeps everything tight (no huge whitespace split) */
+  .wrap {
+    max-width: 520px;
+    margin: 0 auto;
+    padding-top: 6px;
+  }
 
-    div[data-testid="stTextInput"],
-    div[data-testid="stTextInput"] > div,
-    div[data-testid="stTextInput"] > div > div {
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-    }
+  /* Logo centered, high */
+  .logo-wrap{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    direction:ltr;              /* isolate from RTL */
+    margin-top: -40px;          /* make it higher */
+    margin-bottom: 12px;
+  }
+  .logo-wrap img{
+    width: 320px;
+    max-width: 86vw;
+    height: auto;
+    display:block;
+  }
 
-    div[data-testid="stTextInput"] label {
-        display: none !important;
-    }
+  /* Inputs: white, clean (no gray) */
+  div[data-testid="stTextInput"] input{
+    background: #ffffff !important;
+    border: 1px solid #000 !important;
+    border-radius: 10px !important;
+    padding: 12px 12px !important;
+    font-size: 1rem !important;
+    box-shadow: none !important;
+  }
+  div[data-testid="stTextInput"] label{ display:none !important; }
 
-    /* Buttons */
-    .stButton>button,
-    div[data-testid="stFormSubmitButton"]>button {
-        width: 100% !important;
-        border-radius: 8px !important;
-        font-weight: 800 !important;
-        height: 3em !important;
-        max-width: 420px !important;
-    }
+  /* Buttons */
+  .stButton>button{
+    width: 100% !important;
+    border-radius: 10px !important;
+    height: 3em !important;
+    font-weight: 800 !important;
+  }
 
-    /* Centered logo block (isolated from RTL) */
-    .logo-center {
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        direction:ltr;
-        margin-top:-70px;
-        margin-bottom:30px;
-    }
-
-    .hint {
-        color:#666;
-        font-size:0.95rem;
-        margin: 6px 0 10px 0;
-        max-width:420px;
-    }
+  .hint{
+    color:#666;
+    font-size:0.95rem;
+    margin: 10px 0 10px 0;
+  }
 </style>
 """,
     unsafe_allow_html=True,
@@ -100,7 +97,7 @@ def send_otp_email(to_email: str, code: str) -> bool:
         gmail_pass = st.secrets["GMAIL_PASS"]
 
         msg = MIMEText(
-            f"קוד הכניסה שלך למערכת רואה חשבון בקליק: {code}\n\n"
+            f"קוד הכניסה שלך לרואה חשבון בקליק: {code}\n\n"
             f"הקוד תקף ל-2 דקות."
         )
         msg["Subject"] = "קוד כניסה - רואה חשבון בקליק"
@@ -117,24 +114,31 @@ def send_otp_email(to_email: str, code: str) -> bool:
         return False
 
 
-def reset_login_flow():
-    for k in [
+def clear_login_inputs_only():
+    # Clears the "memory" in the input fields whenever we are on the login page fresh
+    for k in ["login_name", "login_email", "otp_input"]:
+        if k in st.session_state:
+            del st.session_state[k]
+
+
+def reset_login_flow(full: bool = True):
+    keys = [
         "otp_sent",
         "otp_code",
         "otp_time",
         "otp_attempts",
         "pending_name",
         "pending_email",
-        "login_name",
-        "login_email",
-        "otp_input",
-    ]:
+    ]
+    if full:
+        keys += ["logged_in", "user_name"]
+    for k in keys:
         if k in st.session_state:
             del st.session_state[k]
 
 
 # -------------------------
-# State
+# State init
 # -------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
@@ -142,6 +146,7 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
+# Force to login if not logged in
 if not st.session_state.logged_in:
     st.session_state.page = "login"
 
@@ -150,105 +155,102 @@ if not st.session_state.logged_in:
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
-
+    # Ensure: every time you arrive to login fresh -> no remembered fields / no old OTP flow
     if not st.session_state.get("otp_sent", False):
-        reset_login_flow()
+        # Clear any old OTP state + clear any typed values
+        for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
+            if k in st.session_state:
+                del st.session_state[k]
+        clear_login_inputs_only()
 
-    # Logo centered and high
-    st.markdown('<div class="logo-center">', unsafe_allow_html=True)
-    st.image("logo.png", width=320)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
 
-    # Right-side form column
-    spacer, form_col = st.columns([3, 1.3])
+    # Centered logo (TOP + CENTER)
+    st.markdown('<div class="logo-wrap"><img src="logo.png" alt="logo"></div>', unsafe_allow_html=True)
 
-    with form_col:
-        otp_sent = st.session_state.get("otp_sent", False)
+    # Title (right aligned, not centered)
+    st.markdown("### כניסה למערכת")
 
-        if not otp_sent:
-            with st.form("login_form", clear_on_submit=False, border=False):
-                name = st.text_input(
-                    "שם",
-                    placeholder="שם מלא — שם ושם משפחה",
-                    label_visibility="collapsed",
-                    key="login_name",
-                    autocomplete="off",
-                ).strip()
+    otp_sent = st.session_state.get("otp_sent", False)
 
-                email = st.text_input(
-                    "מייל",
-                    placeholder="כתובת מייל",
-                    label_visibility="collapsed",
-                    key="login_email",
-                    autocomplete="off",
-                ).strip()
+    if not otp_sent:
+        name = st.text_input(
+            "שם",
+            placeholder="שם מלא — שם ושם משפחה",
+            key="login_name",
+            label_visibility="collapsed",
+            autocomplete="off",
+        ).strip()
 
-                parts = name.split()
-                valid_name = len(parts) >= 2 and all(len(p) >= 2 for p in parts)
-                valid_email = ("@" in email) and ("." in email)
+        email = st.text_input(
+            "מייל",
+            placeholder="כתובת מייל",
+            key="login_email",
+            label_visibility="collapsed",
+            autocomplete="off",
+        ).strip()
 
-                if name and not valid_name:
-                    st.caption("יש להזין שם ושם משפחה")
-                if email and not valid_email:
-                    st.caption("יש להזין כתובת מייל תקינה")
+        parts = name.split()
+        valid_name = len(parts) >= 2 and all(len(p) >= 2 for p in parts)
+        valid_email = ("@" in email) and ("." in email)
 
-                st.markdown(
-                    '<div class="hint">להשלמת הכניסה קוד יישלח לכתובת המייל שהכנסת</div>',
-                    unsafe_allow_html=True,
-                )
+        if name and not valid_name:
+            st.caption("יש להזין שם ושם משפחה")
+        if email and not valid_email:
+            st.caption("יש להזין כתובת מייל תקינה")
 
-                submitted = st.form_submit_button("שלח קוד")
+        # Hint must be JUST above the button (as you asked)
+        st.markdown('<div class="hint">להשלמת הכניסה לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
 
-            if submitted:
-                if not (valid_name and valid_email):
-                    st.warning("יש למלא שם מלא וכתובת מייל תקינה.")
+        if st.button("שלח קוד"):
+            if not (valid_name and valid_email):
+                st.warning("יש למלא שם מלא וכתובת מייל תקינה.")
+            else:
+                code = str(random.randint(100000, 999999))
+                if send_otp_email(email, code):
+                    st.session_state.otp_sent = True
+                    st.session_state.otp_code = code
+                    st.session_state.otp_time = time.time()
+                    st.session_state.otp_attempts = 0
+                    st.session_state.pending_name = name
+                    st.session_state.pending_email = email
+                    st.rerun()
                 else:
-                    code = str(random.randint(100000, 999999))
-                    if send_otp_email(email, code):
-                        st.session_state.otp_sent = True
-                        st.session_state.otp_code = code
-                        st.session_state.otp_time = time.time()
-                        st.session_state.otp_attempts = 0
-                        st.session_state.pending_name = name
-                        st.session_state.pending_email = email
-                        st.rerun()
-                    else:
-                        st.error("שגיאה בשליחת המייל. בדוק/י Secrets ונסה שוב.")
-        else:
-            pending_email = st.session_state.get("pending_email", "")
-            st.info(f"קוד נשלח ל-{pending_email}. תקף ל-2 דקות.")
+                    st.error("שגיאה בשליחת המייל. בדוק/י Secrets ונסה שוב.")
 
-            with st.form("otp_form", clear_on_submit=False, border=False):
-                code_in = st.text_input(
-                    "קוד",
-                    placeholder="הזן/י קוד בן 6 ספרות",
-                    label_visibility="collapsed",
-                    key="otp_input",
-                    autocomplete="off",
-                ).strip()
+    else:
+        pending_email = st.session_state.get("pending_email", "")
+        st.info(f"קוד נשלח ל-{pending_email}. תקף ל-2 דקות.")
 
-                c1, c2 = st.columns(2)
-                with c1:
-                    confirm = st.form_submit_button("אישור")
-                with c2:
-                    restart = st.form_submit_button("התחל מחדש")
+        code_in = st.text_input(
+            "קוד",
+            placeholder="הזן/י קוד בן 6 ספרות",
+            key="otp_input",
+            label_visibility="collapsed",
+            autocomplete="off",
+        ).strip()
 
-            if restart:
-                reset_login_flow()
-                st.rerun()
-
-            if confirm:
+        c1, c2 = st.columns([1, 1])
+        with c1:
+            if st.button("אישור"):
                 elapsed = time.time() - st.session_state.get("otp_time", 0)
                 if elapsed > 120:
                     st.error("הקוד פג תוקף. יש להתחיל מחדש ולקבל קוד חדש.")
-                    reset_login_flow()
+                    # Clear only OTP flow + inputs
+                    for k in ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
+                        if k in st.session_state:
+                            del st.session_state[k]
+                    clear_login_inputs_only()
                     st.rerun()
 
                 correct_code = st.session_state.get("otp_code", "")
                 if code_in == correct_code and code_in:
                     st.session_state.logged_in = True
                     st.session_state.user_name = st.session_state.get("pending_name", "משתמש")
-                    reset_login_flow()
+                    # Clear OTP flow state after success
+                    for k in ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email", "otp_input"]:
+                        if k in st.session_state:
+                            del st.session_state[k]
                     st.session_state.page = "welcome"
                     st.rerun()
                 else:
@@ -256,28 +258,43 @@ if st.session_state.page == "login":
                     remaining = 3 - st.session_state.otp_attempts
                     if remaining <= 0:
                         st.error("3 ניסיונות כושלים — יש להתחיל מחדש ולקבל קוד חדש.")
-                        reset_login_flow()
+                        for k in ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
+                            if k in st.session_state:
+                                del st.session_state[k]
+                        clear_login_inputs_only()
                         st.rerun()
                     else:
                         st.error(f"קוד שגוי. נותרו {remaining} ניסיונות.")
+
+        with c2:
+            if st.button("התחל מחדש"):
+                for k in ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
+                    if k in st.session_state:
+                        del st.session_state[k]
+                clear_login_inputs_only()
+                st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # -------------------------
 # WELCOME PAGE
 # -------------------------
 elif st.session_state.page == "welcome":
-    spacer, content = st.columns([3, 1.3])
-    with content:
-        user_name = st.session_state.get("user_name", "משתמש")
-        st.markdown(f"### ברוכים הבאים, {user_name} 👋")
-        st.write("ברוכים הבאים למערכת הכנה לבחינת לשכת רואי החשבון")
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown('<div class="logo-wrap"><img src="logo.png" alt="logo"></div>', unsafe_allow_html=True)
 
-        if st.button("יציאה"):
-            st.session_state.logged_in = False
-            st.session_state.page = "login"
-            if "user_name" in st.session_state:
-                del st.session_state["user_name"]
-            reset_login_flow()
-            st.rerun()
+    user_name = st.session_state.get("user_name", "משתמש")
+    st.markdown(f"### ברוכים הבאים, {user_name} 👋")
+    st.write("ברוכים הבאים למערכת הכנה לבחינת לשכת רואי החשבון")
+
+    if st.button("יציאה"):
+        st.session_state.logged_in = False
+        st.session_state.page = "login"
+        reset_login_flow(full=False)
+        clear_login_inputs_only()
+        st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # סוף קובץ
