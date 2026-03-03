@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 21:55 (Asia/Jerusalem) | Version: CPA03
+# File: app.py | Date & Time: 2026-03-03 22:18 (Asia/Jerusalem) | Version: CPA05
 
 import streamlit as st
 import smtplib
@@ -11,86 +11,105 @@ from email.mime.text import MIMEText
 # -------------------------
 st.set_page_config(
     page_title="רואה חשבון בקליק",
-    page_icon="favicon.png",  # expects favicon.png in repo root
-    layout="centered",
+    page_icon="favicon.png",   # favicon.png in repo root
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
+# -------------------------
+# CSS: RTL, right-aligned form, center only logo, hide Streamlit chrome, white inputs
+# -------------------------
 st.markdown(
     """
 <style>
-  /* Remove Streamlit chrome (top bar / menu / footer) */
+  /* --- Hide Streamlit chrome (top pill/toolbar/decoration/status/menu/footer) --- */
   header[data-testid="stHeader"] { display: none !important; }
+  div[data-testid="stToolbar"] { display: none !important; }
+  div[data-testid="stDecoration"] { display: none !important; }
+  div[data-testid="stStatusWidget"] { display: none !important; }
+  .stDeployButton { display: none !important; }
   #MainMenu { visibility: hidden !important; }
   footer { visibility: hidden !important; }
-  .stDeployButton { display: none !important; }
 
-  /* RTL + clean white */
+  /* --- Global RTL + clean white background --- */
   html, body, .stApp, .block-container {
     direction: rtl !important;
     text-align: right !important;
     background: #ffffff !important;
   }
 
-  /* Tighten top spacing */
+  /* --- Remove extra top padding --- */
   .block-container {
-    padding-top: 1.2rem !important;
+    padding-top: 1.1rem !important;
     padding-bottom: 2rem !important;
+    max-width: 1200px !important;
   }
 
-  /* Hide sidebar */
+  /* --- Hide sidebar entirely --- */
   section[data-testid="stSidebar"] { display: none !important; }
+  button[kind="header"] { display: none !important; }
 
-  /* Card */
+  /* --- Right-aligned "card" container (NOT centered) --- */
   .card {
-    max-width: 520px;
-    margin: 0 auto;
+    width: min(560px, 92vw);
+    margin-right: 0 !important;
+    margin-left: auto !important;   /* pushes container to the right */
     padding: 22px 20px;
     border: 1px solid #e9e9e9;
     border-radius: 14px;
     box-shadow: 0 10px 26px rgba(0,0,0,0.08);
-    background: #fff;
+    background: #ffffff;
   }
 
-  /* Title/subtitle */
+  /* --- Logo: centered only --- */
+  .logo-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 2px 0 14px 0;
+  }
+
+  /* --- Title --- */
   .title {
     font-size: 1.25rem;
     font-weight: 850;
-    margin: 6px 0 2px 0;
+    margin: 2px 0 10px 0;
     line-height: 1.2;
+    text-align: right;
   }
+
+  /* --- Subtitle placed above button --- */
   .subtitle {
     color: #666;
-    margin: 0 0 14px 0;
+    margin: 8px 0 10px 0;
     font-size: 0.95rem;
     line-height: 1.4;
+    text-align: right;
   }
 
-  /* Inputs */
+  /* --- Inputs: force WHITE background + remove shadows from wrappers --- */
+  div[data-testid="stTextInput"] { background: transparent !important; }
+  div[data-testid="stTextInput"] > div { background: transparent !important; box-shadow: none !important; }
+  div[data-testid="stTextInput"] > div > div { background: transparent !important; box-shadow: none !important; }
   div[data-testid="stTextInput"] input {
+    background: #ffffff !important;
     border-radius: 12px !important;
     padding: 12px !important;
+    box-shadow: none !important;
   }
 
-  /* Buttons */
-  .stButton > button, div[data-testid="stFormSubmitButton"] > button {
+  /* --- Buttons: full width, product-like --- */
+  .stButton > button,
+  div[data-testid="stFormSubmitButton"] > button {
     width: 100% !important;
     border-radius: 12px !important;
     height: 3.15em !important;
     font-weight: 850 !important;
   }
 
-  /* Logo centering */
-  .logo-wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 4px 0 10px 0;
-  }
-
-  /* Mobile */
+  /* --- Mobile tweaks --- */
   @media (max-width: 768px) {
-    .card { padding: 18px 14px; }
+    .card { padding: 18px 14px; width: 92vw; }
     .title { font-size: 1.15rem; }
   }
 </style>
@@ -102,10 +121,6 @@ st.markdown(
 # Helpers
 # -------------------------
 def send_otp_email(to_email: str, code: str) -> bool:
-    """
-    Sends OTP code via Gmail SMTP using Streamlit secrets:
-    st.secrets["GMAIL_USER"], st.secrets["GMAIL_PASS"]
-    """
     try:
         gmail_user = st.secrets["GMAIL_USER"]
         gmail_pass = st.secrets["GMAIL_PASS"]
@@ -129,7 +144,7 @@ def send_otp_email(to_email: str, code: str) -> bool:
 
 
 def reset_login_flow():
-    # OTP/session artifacts + input keys (no memory when returning to login)
+    # No memory: clear OTP + inputs every time we reset
     for k in [
         "otp_sent",
         "otp_code",
@@ -150,13 +165,9 @@ def reset_login_flow():
 # -------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# -------------------------
-# Router
-# -------------------------
 if not st.session_state.logged_in:
     st.session_state.page = "login"
 
@@ -164,30 +175,24 @@ if not st.session_state.logged_in:
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
-    # Every arrival to login starts clean (no remembered inputs/codes)
-    if not st.session_state.get("otp_sent", False):
-        for k in ["login_name", "login_email", "otp_input"]:
-            if k in st.session_state:
-                del st.session_state[k]
-
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    # Centered logo (logo.png expected in repo root)
-    try:
-        st.markdown('<div class="logo-wrap">', unsafe_allow_html=True)
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c2:
-            st.image("logo.png", use_container_width=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    except Exception:
-        pass
+    # Centered logo only (logo.png in repo root)
+    st.markdown('<div class="logo-wrap">', unsafe_allow_html=True)
+    st.image("logo.png", width=320)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown('<div class="title">כניסה למערכת</div>', unsafe_allow_html=True)
 
     otp_sent = st.session_state.get("otp_sent", False)
 
     if not otp_sent:
-        # Use a form: no "Press Enter to apply", TAB flows naturally
+        # Ensure no remembered inputs on fresh login page load
+        for k in ["login_name", "login_email", "otp_input"]:
+            if k in st.session_state:
+                del st.session_state[k]
+
+        # Form prevents the "Press Enter to apply" overlay behavior
         with st.form("login_form", clear_on_submit=False, border=False):
             name = st.text_input(
                 "שם מלא",
@@ -213,7 +218,7 @@ if st.session_state.page == "login":
             if email and not valid_email:
                 st.caption("יש להזין כתובת מייל תקינה.")
 
-            # Explanation placed directly above the button (as requested)
+            # Text directly above the button
             st.markdown(
                 '<div class="subtitle">לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>',
                 unsafe_allow_html=True,
@@ -235,7 +240,7 @@ if st.session_state.page == "login":
                     st.session_state.pending_name = name
                     st.session_state.pending_email = email
 
-                    # Clear inputs (no memory)
+                    # Clear inputs immediately (no memory)
                     for k in ["login_name", "login_email"]:
                         if k in st.session_state:
                             del st.session_state[k]
