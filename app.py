@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA22
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA23
 
 import streamlit as st
 import smtplib
@@ -332,7 +332,7 @@ elif st.session_state.page == "study":
     """, unsafe_allow_html=True)
 
     st.markdown("### 📚 שיעורי לימוד")
-    st.markdown("<div style='margin-bottom:16px;'>בחר נושא:</div>", unsafe_allow_html=True)
+    st.markdown("בחר נושא:")
 
     for topic in SYLLABUS:
         if st.button(topic, key=f"topic_{topic}"):
