@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA19
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA20
 
 import streamlit as st
 import smtplib
@@ -93,8 +93,6 @@ st.markdown(
     padding: 12px 12px !important;
     font-size: 1rem !important;
     box-shadow: none !important;
-    direction: ltr !important;
-    text-align: right !important;
   }
   div[data-testid="stTextInput"] label { display: none !important; }
 
@@ -109,6 +107,24 @@ st.markdown(
     color: #666;
     font-size: 0.95rem;
     margin: 10px 0 10px 0;
+  }
+
+  .menu-btn>button {
+    background-color: #1a2e5a !important;
+    color: white !important;
+    font-size: 1rem !important;
+  }
+  .menu-btn>button:hover {
+    background-color: #243d75 !important;
+  }
+
+  .menu-btn>button {
+    background-color: #1a2e5a !important;
+    color: white !important;
+    font-size: 1rem !important;
+  }
+  .menu-btn>button:hover {
+    background-color: #243d75 !important;
   }
 </style>
 """,
@@ -177,6 +193,7 @@ if st.session_state.page == "login":
         for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
             if k in st.session_state:
                 del st.session_state[k]
+        clear_login_inputs_only()
 
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
@@ -185,29 +202,34 @@ if st.session_state.page == "login":
     otp_sent = st.session_state.get("otp_sent", False)
 
     if not otp_sent:
-        st.text_input(
+        name = st.text_input(
             "שם",
             placeholder="שם מלא — שם ושם משפחה",
             key="login_name",
             label_visibility="collapsed",
             autocomplete="off",
-        )
-        st.text_input(
+        ).strip()
+
+        email = st.text_input(
             "מייל",
             placeholder="כתובת מייל",
             key="login_email",
             label_visibility="collapsed",
             autocomplete="off",
-        )
+        ).strip()
+
+        parts = name.split()
+        valid_name = len(parts) >= 2 and all(len(p) >= 2 for p in parts)
+        valid_email = ("@" in email) and ("." in email)
+
+        if name and not valid_name:
+            st.caption("יש להזין שם ושם משפחה")
+        if email and not valid_email:
+            st.caption("יש להזין כתובת מייל תקינה")
 
         st.markdown('<div class="hint">להשלמת הכניסה לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
 
         if st.button("שלח קוד"):
-            name = st.session_state.get("login_name", "").strip()
-            email = st.session_state.get("login_email", "").strip().replace(' ', '')
-            parts = name.split()
-            valid_name = len(parts) >= 2 and all(len(p) >= 2 for p in parts)
-            valid_email = ("@" in email) and ("." in email)
             if not (valid_name and valid_email):
                 st.warning("יש למלא שם מלא וכתובת מייל תקינה.")
             else:
@@ -281,22 +303,56 @@ if st.session_state.page == "login":
 
 
 # -------------------------
-# WELCOME PAGE
+# WELCOME PAGE (תפריט ראשי)
 # -------------------------
 elif st.session_state.page == "welcome":
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
 
     user_name = st.session_state.get("user_name", "משתמש")
-    st.markdown(f"### ברוכים הבאים, {user_name} 👋")
-    st.write("ברוכים הבאים למערכת הכנה לבחינת לשכת רואי החשבון")
 
-    if st.button("יציאה"):
-        st.session_state.logged_in = False
-        st.session_state.page = "login"
-        reset_login_flow(full=False)
-        clear_login_inputs_only()
-        st.rerun()
+    # שורת משתמש
+    st.markdown(f"""
+        <div style="display:flex; align-items:center; justify-content:flex-end;
+                    gap:8px; margin-bottom:20px;">
+            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
+            <span style="font-size:1.5rem;">👤</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # כותרת
+    st.markdown("""
+        <div style="text-align:right; font-size:1rem; color:#222;
+                    margin-bottom:32px; line-height:1.7;">
+            ברוכים הבאים למערכת הכנה למבחני מועצת רואי החשבון,
+            הסמכה לראיית חשבון
+        </div>
+    """, unsafe_allow_html=True)
+
+    # כפתורים — מוזחים פנימה מהקצה הימני
+    _space, col1, col2, _end = st.columns([0.15, 1, 1, 2])
+    with col1:
+        st.markdown('<div class="menu-btn">', unsafe_allow_html=True)
+        if st.button("📚 שיעורי לימוד"):
+            st.session_state.page = "study"
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown('<div class="menu-btn">', unsafe_allow_html=True)
+        if st.button("📝 גש/י לבחינה"):
+            st.session_state.page = "exam"
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    _s, col_out = st.columns([3, 1])
+    with col_out:
+        if st.button("יציאה"):
+            st.session_state.logged_in = False
+            st.session_state.page = "login"
+            reset_login_flow(full=False)
+            clear_login_inputs_only()
+            st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
