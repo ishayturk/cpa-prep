@@ -12,7 +12,7 @@ from PIL import Image
 # Page config
 # -------------------------
 try:
-    icon = Image.open("favicon.ico")
+    icon = Image.open("favicon.png")
 except Exception:
     icon = "✅"
 
