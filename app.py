@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-02 09:19 (Asia/Jerusalem) | Version: CPA01
+# File: app.py | Date & Time: 2026-03-03 21:40 (Asia/Jerusalem) | Version: CPA02
 
 import streamlit as st
 import smtplib
@@ -10,8 +10,8 @@ from email.mime.text import MIMEText
 # Page config (no sidebar, RTL-friendly, clean white UI)
 # -------------------------
 st.set_page_config(
-    page_title="CPA Prep",
-    page_icon="✅",
+    page_title="רואה חשבון בקליק",
+    page_icon="favicon.ico",  # expects favicon.ico in repo root
     layout="centered",
     initial_sidebar_state="collapsed"
 )
@@ -66,6 +66,14 @@ st.markdown("""
     padding: 10px !important;
   }
 
+  /* Center logo */
+  .logo-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
   /* Mobile tweaks */
   @media (max-width: 768px) {
     .card { padding: 18px 14px; }
@@ -73,7 +81,6 @@ st.markdown("""
   }
 </style>
 """, unsafe_allow_html=True)
-
 
 # -------------------------
 # Helpers
@@ -91,7 +98,7 @@ def send_otp_email(to_email: str, code: str) -> bool:
             f"קוד הכניסה שלך למערכת ההכנה לבחינת לשכת רואי החשבון: {code}\n\n"
             f"הקוד תקף ל-2 דקות."
         )
-        msg["Subject"] = "קוד כניסה - CPA Prep"
+        msg["Subject"] = "קוד כניסה - רואה חשבון בקליק"
         msg["From"] = gmail_user
         msg["To"] = to_email
 
@@ -106,9 +113,12 @@ def send_otp_email(to_email: str, code: str) -> bool:
 
 
 def reset_login_flow():
+    # OTP/session artifacts
     for k in [
         "otp_sent", "otp_code", "otp_time", "otp_attempts",
-        "pending_name", "pending_email"
+        "pending_name", "pending_email",
+        # input keys (no memory when coming back to login)
+        "login_name", "login_email", "otp_input"
     ]:
         if k in st.session_state:
             del st.session_state[k]
@@ -130,30 +140,67 @@ if "page" not in st.session_state:
 if not st.session_state.logged_in:
     st.session_state.page = "login"
 
+
 # -------------------------
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
+    # Ensure: every arrival to login starts clean (no remembered inputs/codes)
+    if not st.session_state.get("otp_sent", False):
+        # clear any old values from previous run/session
+        for k in ["login_name", "login_email", "otp_input"]:
+            if k in st.session_state:
+                del st.session_state[k]
+
     st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    # Centered logo (logo.png expected in repo root)
+    try:
+        st.markdown('<div class="logo-wrap">', unsafe_allow_html=True)
+        st.image("logo.png", width=240)
+        st.markdown('</div>', unsafe_allow_html=True)
+    except Exception:
+        # If logo is missing, do nothing (no extra UI/headers)
+        pass
+
     st.markdown('<div class="title">כניסה למערכת</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">קוד חד־פעמי יישלח למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
 
     otp_sent = st.session_state.get("otp_sent", False)
 
     if not otp_sent:
-        name = st.text_input("שם מלא", placeholder="שם ושם משפחה", label_visibility="collapsed").strip()
-        email = st.text_input("מייל", placeholder="כתובת מייל", label_visibility="collapsed").strip()
+        # Use a form to avoid "Press Enter to apply" overlays and make TAB flow natural.
+        with st.form("login_form", clear_on_submit=False, border=False):
+            name = st.text_input(
+                "שם מלא",
+                placeholder="שם ושם משפחה",
+                label_visibility="collapsed",
+                key="login_name",
+                autocomplete="off"
+            ).strip()
 
-        # Basic validation
-        valid_name = len(name.split()) >= 2 and all(len(p) >= 2 for p in name.split())
-        valid_email = ("@" in email) and ("." in email)
+            email = st.text_input(
+                "מייל",
+                placeholder="כתובת מייל",
+                label_visibility="collapsed",
+                key="login_email",
+                autocomplete="off"
+            ).strip()
 
-        if name and not valid_name:
-            st.caption("יש להזין שם ושם משפחה.")
-        if email and not valid_email:
-            st.caption("יש להזין כתובת מייל תקינה.")
+            # Basic validation
+            valid_name = len(name.split()) >= 2 and all(len(p) >= 2 for p in name.split())
+            valid_email = ("@" in email) and ("." in email)
 
-        if st.button("שלח קוד"):
+            if name and not valid_name:
+                st.caption("יש להזין שם ושם משפחה.")
+            if email and not valid_email:
+                st.caption("יש להזין כתובת מייל תקינה.")
+
+            # The explanation MUST be right above the button (not above fields)
+            st.markdown('<div class="subtitle">לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
+
+            submitted = st.form_submit_button("שלח קוד")
+
+        if submitted:
             if not (valid_name and valid_email):
                 st.warning("יש למלא שם מלא וכתובת מייל תקינה.")
             else:
@@ -166,7 +213,12 @@ if st.session_state.page == "login":
                     st.session_state.otp_attempts = 0
                     st.session_state.pending_name = name
                     st.session_state.pending_email = email
-                    st.success("הקוד נשלח. בדוק/י את המייל.")
+
+                    # Clear input fields (no memory)
+                    for k in ["login_name", "login_email"]:
+                        if k in st.session_state:
+                            del st.session_state[k]
+
                     st.rerun()
                 else:
                     st.error("שליחת המייל נכשלה. בדוק/י Secrets ונסה שוב.")
@@ -175,38 +227,49 @@ if st.session_state.page == "login":
         pending_email = st.session_state.get("pending_email", "")
         st.info(f"קוד נשלח ל-{pending_email}. תקף ל-2 דקות.")
 
-        code_in = st.text_input("קוד", placeholder="הזן/י קוד בן 6 ספרות", label_visibility="collapsed").strip()
+        # Also use form here (prevents enter overlays)
+        with st.form("otp_form", clear_on_submit=False, border=False):
+            code_in = st.text_input(
+                "קוד",
+                placeholder="הזן/י קוד בן 6 ספרות",
+                label_visibility="collapsed",
+                key="otp_input",
+                autocomplete="off"
+            ).strip()
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("אישור"):
-                elapsed = time.time() - st.session_state.get("otp_time", 0)
-                if elapsed > 120:
-                    st.error("הקוד פג תוקף. יש להתחיל מחדש ולקבל קוד חדש.")
-                    reset_login_flow()
-                    st.rerun()
+            c1, c2 = st.columns(2)
+            with c1:
+                confirm = st.form_submit_button("אישור")
+            with c2:
+                restart = st.form_submit_button("התחל מחדש")
 
-                correct_code = st.session_state.get("otp_code", "")
-                if code_in == correct_code:
-                    st.session_state.logged_in = True
-                    st.session_state.user_name = st.session_state.get("pending_name", "משתמש")
-                    reset_login_flow()
-                    st.session_state.page = "welcome"
-                    st.rerun()
-                else:
-                    st.session_state.otp_attempts = st.session_state.get("otp_attempts", 0) + 1
-                    remaining = 3 - st.session_state.otp_attempts
-                    if remaining <= 0:
-                        st.error("3 ניסיונות כושלים — יש להתחיל מחדש ולקבל קוד חדש.")
-                        reset_login_flow()
-                        st.rerun()
-                    else:
-                        st.error(f"קוד שגוי. נותרו {remaining} ניסיונות.")
+        if restart:
+            reset_login_flow()
+            st.rerun()
 
-        with col2:
-            if st.button("התחל מחדש"):
+        if confirm:
+            elapsed = time.time() - st.session_state.get("otp_time", 0)
+            if elapsed > 120:
+                st.error("הקוד פג תוקף. יש להתחיל מחדש ולקבל קוד חדש.")
                 reset_login_flow()
                 st.rerun()
+
+            correct_code = st.session_state.get("otp_code", "")
+            if code_in == correct_code and code_in:
+                st.session_state.logged_in = True
+                st.session_state.user_name = st.session_state.get("pending_name", "משתמש")
+                reset_login_flow()
+                st.session_state.page = "welcome"
+                st.rerun()
+            else:
+                st.session_state.otp_attempts = st.session_state.get("otp_attempts", 0) + 1
+                remaining = 3 - st.session_state.otp_attempts
+                if remaining <= 0:
+                    st.error("3 ניסיונות כושלים — יש להתחיל מחדש ולקבל קוד חדש.")
+                    reset_login_flow()
+                    st.rerun()
+                else:
+                    st.error(f"קוד שגוי. נותרו {remaining} ניסיונות.")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -233,6 +296,9 @@ elif st.session_state.page == "welcome":
         for k in ["user_name"]:
             if k in st.session_state:
                 del st.session_state[k]
+        reset_login_flow()
         st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
+
+# סוף קובץ
