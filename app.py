@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 21:40 (Asia/Jerusalem) | Version: CPA02
+# File: app.py | Date & Time: 2026-03-03 21:55 (Asia/Jerusalem) | Version: CPA03
 
 import streamlit as st
 import smtplib
@@ -7,80 +7,96 @@ import random
 from email.mime.text import MIMEText
 
 # -------------------------
-# Page config (no sidebar, RTL-friendly, clean white UI)
+# Page config
 # -------------------------
 st.set_page_config(
     page_title="רואה חשבון בקליק",
-    page_icon="favicon.ico",  # expects favicon.ico in repo root
+    page_icon="favicon.png",  # expects favicon.png in repo root
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
 
-st.markdown("""
+st.markdown(
+    """
 <style>
-  /* RTL + clean white background */
-  html, body, .stApp, [class*="st-"], .block-container {
+  /* Remove Streamlit chrome (top bar / menu / footer) */
+  header[data-testid="stHeader"] { display: none !important; }
+  #MainMenu { visibility: hidden !important; }
+  footer { visibility: hidden !important; }
+  .stDeployButton { display: none !important; }
+
+  /* RTL + clean white */
+  html, body, .stApp, .block-container {
     direction: rtl !important;
     text-align: right !important;
     background: #ffffff !important;
   }
 
-  /* Hide Streamlit sidebar + its toggle */
-  section[data-testid="stSidebar"] { display: none !important; }
-  button[kind="header"] { display: none !important; }
+  /* Tighten top spacing */
+  .block-container {
+    padding-top: 1.2rem !important;
+    padding-bottom: 2rem !important;
+  }
 
-  /* Centered card look */
+  /* Hide sidebar */
+  section[data-testid="stSidebar"] { display: none !important; }
+
+  /* Card */
   .card {
     max-width: 520px;
     margin: 0 auto;
     padding: 22px 20px;
     border: 1px solid #e9e9e9;
     border-radius: 14px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    box-shadow: 0 10px 26px rgba(0,0,0,0.08);
     background: #fff;
   }
 
+  /* Title/subtitle */
   .title {
-    font-size: 1.6rem;
-    font-weight: 800;
-    margin-bottom: 6px;
+    font-size: 1.25rem;
+    font-weight: 850;
+    margin: 6px 0 2px 0;
+    line-height: 1.2;
   }
-
   .subtitle {
     color: #666;
-    margin-bottom: 14px;
+    margin: 0 0 14px 0;
     font-size: 0.95rem;
-  }
-
-  /* Buttons look a bit more "product" */
-  .stButton > button {
-    width: 100% !important;
-    border-radius: 10px !important;
-    height: 3em !important;
-    font-weight: 800 !important;
+    line-height: 1.4;
   }
 
   /* Inputs */
   div[data-testid="stTextInput"] input {
-    border-radius: 10px !important;
-    padding: 10px !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
   }
 
-  /* Center logo */
+  /* Buttons */
+  .stButton > button, div[data-testid="stFormSubmitButton"] > button {
+    width: 100% !important;
+    border-radius: 12px !important;
+    height: 3.15em !important;
+    font-weight: 850 !important;
+  }
+
+  /* Logo centering */
   .logo-wrap {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 14px;
+    margin: 4px 0 10px 0;
   }
 
-  /* Mobile tweaks */
+  /* Mobile */
   @media (max-width: 768px) {
     .card { padding: 18px 14px; }
-    .title { font-size: 1.25rem; }
+    .title { font-size: 1.15rem; }
   }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # -------------------------
 # Helpers
@@ -113,12 +129,17 @@ def send_otp_email(to_email: str, code: str) -> bool:
 
 
 def reset_login_flow():
-    # OTP/session artifacts
+    # OTP/session artifacts + input keys (no memory when returning to login)
     for k in [
-        "otp_sent", "otp_code", "otp_time", "otp_attempts",
-        "pending_name", "pending_email",
-        # input keys (no memory when coming back to login)
-        "login_name", "login_email", "otp_input"
+        "otp_sent",
+        "otp_code",
+        "otp_time",
+        "otp_attempts",
+        "pending_name",
+        "pending_email",
+        "login_name",
+        "login_email",
+        "otp_input",
     ]:
         if k in st.session_state:
             del st.session_state[k]
@@ -133,21 +154,18 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-
 # -------------------------
 # Router
 # -------------------------
 if not st.session_state.logged_in:
     st.session_state.page = "login"
 
-
 # -------------------------
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
-    # Ensure: every arrival to login starts clean (no remembered inputs/codes)
+    # Every arrival to login starts clean (no remembered inputs/codes)
     if not st.session_state.get("otp_sent", False):
-        # clear any old values from previous run/session
         for k in ["login_name", "login_email", "otp_input"]:
             if k in st.session_state:
                 del st.session_state[k]
@@ -157,10 +175,11 @@ if st.session_state.page == "login":
     # Centered logo (logo.png expected in repo root)
     try:
         st.markdown('<div class="logo-wrap">', unsafe_allow_html=True)
-        st.image("logo.png", width=240)
-        st.markdown('</div>', unsafe_allow_html=True)
+        c1, c2, c3 = st.columns([1, 2, 1])
+        with c2:
+            st.image("logo.png", use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
     except Exception:
-        # If logo is missing, do nothing (no extra UI/headers)
         pass
 
     st.markdown('<div class="title">כניסה למערכת</div>', unsafe_allow_html=True)
@@ -168,14 +187,14 @@ if st.session_state.page == "login":
     otp_sent = st.session_state.get("otp_sent", False)
 
     if not otp_sent:
-        # Use a form to avoid "Press Enter to apply" overlays and make TAB flow natural.
+        # Use a form: no "Press Enter to apply", TAB flows naturally
         with st.form("login_form", clear_on_submit=False, border=False):
             name = st.text_input(
                 "שם מלא",
                 placeholder="שם ושם משפחה",
                 label_visibility="collapsed",
                 key="login_name",
-                autocomplete="off"
+                autocomplete="off",
             ).strip()
 
             email = st.text_input(
@@ -183,10 +202,9 @@ if st.session_state.page == "login":
                 placeholder="כתובת מייל",
                 label_visibility="collapsed",
                 key="login_email",
-                autocomplete="off"
+                autocomplete="off",
             ).strip()
 
-            # Basic validation
             valid_name = len(name.split()) >= 2 and all(len(p) >= 2 for p in name.split())
             valid_email = ("@" in email) and ("." in email)
 
@@ -195,8 +213,11 @@ if st.session_state.page == "login":
             if email and not valid_email:
                 st.caption("יש להזין כתובת מייל תקינה.")
 
-            # The explanation MUST be right above the button (not above fields)
-            st.markdown('<div class="subtitle">לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
+            # Explanation placed directly above the button (as requested)
+            st.markdown(
+                '<div class="subtitle">לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>',
+                unsafe_allow_html=True,
+            )
 
             submitted = st.form_submit_button("שלח קוד")
 
@@ -214,7 +235,7 @@ if st.session_state.page == "login":
                     st.session_state.pending_name = name
                     st.session_state.pending_email = email
 
-                    # Clear input fields (no memory)
+                    # Clear inputs (no memory)
                     for k in ["login_name", "login_email"]:
                         if k in st.session_state:
                             del st.session_state[k]
@@ -227,14 +248,13 @@ if st.session_state.page == "login":
         pending_email = st.session_state.get("pending_email", "")
         st.info(f"קוד נשלח ל-{pending_email}. תקף ל-2 דקות.")
 
-        # Also use form here (prevents enter overlays)
         with st.form("otp_form", clear_on_submit=False, border=False):
             code_in = st.text_input(
                 "קוד",
                 placeholder="הזן/י קוד בן 6 ספרות",
                 label_visibility="collapsed",
                 key="otp_input",
-                autocomplete="off"
+                autocomplete="off",
             ).strip()
 
             c1, c2 = st.columns(2)
@@ -273,7 +293,6 @@ if st.session_state.page == "login":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-
 # -------------------------
 # WELCOME PAGE
 # -------------------------
@@ -284,7 +303,7 @@ elif st.session_state.page == "welcome":
     st.markdown(f'<div class="title">ברוכים הבאים, {user_name} 👋</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="subtitle">ברוכים הבאים למערכת הכנה לבחינת לשכת רואי החשבון</div>',
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
     st.write("")
