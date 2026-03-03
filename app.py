@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA18
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA19
 
 import streamlit as st
 import smtplib
@@ -177,7 +177,6 @@ if st.session_state.page == "login":
         for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
             if k in st.session_state:
                 del st.session_state[k]
-        clear_login_inputs_only()
 
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
