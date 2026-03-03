@@ -1,9 +1,10 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA08
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA09
 
 import streamlit as st
 import smtplib
 import time
 import random
+import base64
 from email.mime.text import MIMEText
 from PIL import Image
 
@@ -23,7 +24,24 @@ st.set_page_config(
 )
 
 # -------------------------
-# CSS (RTL global, but logo block is isolated)
+# Logo loader (base64)
+# -------------------------
+def get_logo_base64():
+    try:
+        with open("logo.png", "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    except Exception:
+        return None
+
+logo_b64 = get_logo_base64()
+logo_tag = (
+    f'<img src="data:image/png;base64,{logo_b64}" alt="logo">'
+    if logo_b64
+    else '<span style="font-size:2rem;">✅</span>'
+)
+
+# -------------------------
+# CSS
 # -------------------------
 st.markdown(
     """
@@ -36,31 +54,34 @@ st.markdown(
   section[data-testid="stSidebar"] { display: none !important; }
   button[kind="header"] { display: none !important; }
 
-  /* Wrapper keeps everything tight (no huge whitespace split) */
   .wrap {
     max-width: 520px;
     margin: 0 auto;
     padding-top: 6px;
   }
 
-  /* Logo centered, high */
-  .logo-wrap{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    direction:ltr;              /* isolate from RTL */
-    margin-top: -40px;          /* make it higher */
+  .logo-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    direction: ltr;
+    margin-top: -40px;
     margin-bottom: 12px;
   }
-  .logo-wrap img{
+  .logo-wrap img {
     width: 320px;
     max-width: 86vw;
     height: auto;
-    display:block;
+    display: block;
   }
 
-  /* Inputs: white, clean (no gray) */
-  div[data-testid="stTextInput"] input{
+  /* Inputs: 50% width, anchored right */
+  div[data-testid="stTextInput"] {
+    width: 50% !important;
+    margin-right: 0 !important;
+    margin-left: auto !important;
+  }
+  div[data-testid="stTextInput"] input {
     background: #ffffff !important;
     border: 1px solid #000 !important;
     border-radius: 10px !important;
@@ -68,19 +89,18 @@ st.markdown(
     font-size: 1rem !important;
     box-shadow: none !important;
   }
-  div[data-testid="stTextInput"] label{ display:none !important; }
+  div[data-testid="stTextInput"] label { display: none !important; }
 
-  /* Buttons */
-  .stButton>button{
+  .stButton>button {
     width: 100% !important;
     border-radius: 10px !important;
     height: 3em !important;
     font-weight: 800 !important;
   }
 
-  .hint{
-    color:#666;
-    font-size:0.95rem;
+  .hint {
+    color: #666;
+    font-size: 0.95rem;
     margin: 10px 0 10px 0;
   }
 </style>
@@ -115,21 +135,13 @@ def send_otp_email(to_email: str, code: str) -> bool:
 
 
 def clear_login_inputs_only():
-    # Clears the "memory" in the input fields whenever we are on the login page fresh
     for k in ["login_name", "login_email", "otp_input"]:
         if k in st.session_state:
             del st.session_state[k]
 
 
 def reset_login_flow(full: bool = True):
-    keys = [
-        "otp_sent",
-        "otp_code",
-        "otp_time",
-        "otp_attempts",
-        "pending_name",
-        "pending_email",
-    ]
+    keys = ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]
     if full:
         keys += ["logged_in", "user_name"]
     for k in keys:
@@ -146,7 +158,6 @@ if "logged_in" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "login"
 
-# Force to login if not logged in
 if not st.session_state.logged_in:
     st.session_state.page = "login"
 
@@ -155,20 +166,14 @@ if not st.session_state.logged_in:
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
-    # Ensure: every time you arrive to login fresh -> no remembered fields / no old OTP flow
     if not st.session_state.get("otp_sent", False):
-        # Clear any old OTP state + clear any typed values
         for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
             if k in st.session_state:
                 del st.session_state[k]
         clear_login_inputs_only()
 
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-
-    # Centered logo (TOP + CENTER)
-    st.markdown('<div class="logo-wrap"><img src="logo.png" alt="logo"></div>', unsafe_allow_html=True)
-
-    # Title (right aligned, not centered)
+    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
     st.markdown("### כניסה למערכת")
 
     otp_sent = st.session_state.get("otp_sent", False)
@@ -199,7 +204,6 @@ if st.session_state.page == "login":
         if email and not valid_email:
             st.caption("יש להזין כתובת מייל תקינה")
 
-        # Hint must be JUST above the button (as you asked)
         st.markdown('<div class="hint">להשלמת הכניסה לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
 
         if st.button("שלח קוד"):
@@ -236,7 +240,6 @@ if st.session_state.page == "login":
                 elapsed = time.time() - st.session_state.get("otp_time", 0)
                 if elapsed > 120:
                     st.error("הקוד פג תוקף. יש להתחיל מחדש ולקבל קוד חדש.")
-                    # Clear only OTP flow + inputs
                     for k in ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
                         if k in st.session_state:
                             del st.session_state[k]
@@ -247,7 +250,6 @@ if st.session_state.page == "login":
                 if code_in == correct_code and code_in:
                     st.session_state.logged_in = True
                     st.session_state.user_name = st.session_state.get("pending_name", "משתמש")
-                    # Clear OTP flow state after success
                     for k in ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email", "otp_input"]:
                         if k in st.session_state:
                             del st.session_state[k]
@@ -282,7 +284,7 @@ if st.session_state.page == "login":
 # -------------------------
 elif st.session_state.page == "welcome":
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown('<div class="logo-wrap"><img src="logo.png" alt="logo"></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
 
     user_name = st.session_state.get("user_name", "משתמש")
     st.markdown(f"### ברוכים הבאים, {user_name} 👋")
