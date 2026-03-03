@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA20
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA21
 
 import streamlit as st
 import smtplib
@@ -43,13 +43,10 @@ logo_tag = (
 # -------------------------
 # CSS
 # -------------------------
-st.markdown(
-    """
+st.markdown("""
 <style>
   * { direction: rtl; text-align: right; }
-
   html, body, .stApp, .block-container { background: #ffffff !important; }
-
   header, #MainMenu, footer { visibility: hidden; height: 0; }
   section[data-testid="stSidebar"] { display: none !important; }
   button[kind="header"] { display: none !important; }
@@ -58,13 +55,11 @@ st.markdown(
     padding-top: 0rem !important;
     margin-top: -10px !important;
   }
-
   .wrap {
     max-width: 520px;
     margin: 0 auto;
     padding-top: 0px;
   }
-
   .logo-wrap {
     display: flex;
     justify-content: flex-start;
@@ -79,8 +74,6 @@ st.markdown(
     height: auto;
     display: block;
   }
-
-  /* Inputs: 50% width, anchored right */
   div[data-testid="stTextInput"] {
     width: 50% !important;
     margin-right: 0 !important;
@@ -90,34 +83,24 @@ st.markdown(
     background: #ffffff !important;
     border: 1px solid #000 !important;
     border-radius: 10px !important;
-    padding: 12px 12px !important;
+    padding: 12px !important;
     font-size: 1rem !important;
     box-shadow: none !important;
+    direction: ltr !important;
+    text-align: right !important;
   }
   div[data-testid="stTextInput"] label { display: none !important; }
-
   .stButton>button {
     width: 100% !important;
     border-radius: 10px !important;
     height: 3em !important;
     font-weight: 800 !important;
   }
-
   .hint {
     color: #666;
     font-size: 0.95rem;
-    margin: 10px 0 10px 0;
+    margin: 10px 0;
   }
-
-  .menu-btn>button {
-    background-color: #1a2e5a !important;
-    color: white !important;
-    font-size: 1rem !important;
-  }
-  .menu-btn>button:hover {
-    background-color: #243d75 !important;
-  }
-
   .menu-btn>button {
     background-color: #1a2e5a !important;
     color: white !important;
@@ -127,9 +110,7 @@ st.markdown(
     background-color: #243d75 !important;
   }
 </style>
-""",
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
 
 # -------------------------
 # Helpers
@@ -138,20 +119,14 @@ def send_otp_email(to_email: str, code: str) -> bool:
     try:
         gmail_user = st.secrets["GMAIL_USER"]
         gmail_pass = st.secrets["GMAIL_PASS"]
-
-        msg = MIMEText(
-            f"קוד הכניסה שלך לרואה חשבון בקליק: {code}\n\n"
-            f"הקוד תקף ל-2 דקות."
-        )
+        msg = MIMEText(f"קוד הכניסה שלך לרואה חשבון בקליק: {code}\n\nהקוד תקף ל-2 דקות.")
         msg["Subject"] = "קוד כניסה - רואה חשבון בקליק"
         msg["From"] = gmail_user
         msg["To"] = to_email
-
         with smtplib.SMTP("smtp.gmail.com", 587) as s:
             s.starttls()
             s.login(gmail_user, gmail_pass)
             s.send_message(msg)
-
         return True
     except Exception:
         return False
@@ -177,10 +152,8 @@ def reset_login_flow(full: bool = True):
 # -------------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-
 if "page" not in st.session_state:
     st.session_state.page = "login"
-
 if not st.session_state.logged_in:
     st.session_state.page = "login"
 
@@ -193,7 +166,6 @@ if st.session_state.page == "login":
         for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
             if k in st.session_state:
                 del st.session_state[k]
-        clear_login_inputs_only()
 
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
@@ -202,34 +174,19 @@ if st.session_state.page == "login":
     otp_sent = st.session_state.get("otp_sent", False)
 
     if not otp_sent:
-        name = st.text_input(
-            "שם",
-            placeholder="שם מלא — שם ושם משפחה",
-            key="login_name",
-            label_visibility="collapsed",
-            autocomplete="off",
-        ).strip()
-
-        email = st.text_input(
-            "מייל",
-            placeholder="כתובת מייל",
-            key="login_email",
-            label_visibility="collapsed",
-            autocomplete="off",
-        ).strip()
-
-        parts = name.split()
-        valid_name = len(parts) >= 2 and all(len(p) >= 2 for p in parts)
-        valid_email = ("@" in email) and ("." in email)
-
-        if name and not valid_name:
-            st.caption("יש להזין שם ושם משפחה")
-        if email and not valid_email:
-            st.caption("יש להזין כתובת מייל תקינה")
+        st.text_input("שם", placeholder="שם מלא — שם ושם משפחה",
+                      key="login_name", label_visibility="collapsed", autocomplete="off")
+        st.text_input("מייל", placeholder="כתובת מייל",
+                      key="login_email", label_visibility="collapsed", autocomplete="off")
 
         st.markdown('<div class="hint">להשלמת הכניסה לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
 
         if st.button("שלח קוד"):
+            name = st.session_state.get("login_name", "").strip()
+            email = st.session_state.get("login_email", "").strip().replace(" ", "")
+            parts = name.split()
+            valid_name = len(parts) >= 2 and all(len(p) >= 2 for p in parts)
+            valid_email = ("@" in email) and ("." in email)
             if not (valid_name and valid_email):
                 st.warning("יש למלא שם מלא וכתובת מייל תקינה.")
             else:
@@ -249,13 +206,9 @@ if st.session_state.page == "login":
         pending_email = st.session_state.get("pending_email", "")
         st.info(f"קוד נשלח ל-{pending_email}. תקף ל-2 דקות.")
 
-        code_in = st.text_input(
-            "קוד",
-            placeholder="הזן/י קוד בן 6 ספרות",
-            key="otp_input",
-            label_visibility="collapsed",
-            autocomplete="off",
-        ).strip()
+        code_in = st.text_input("קוד", placeholder="הזן/י קוד בן 6 ספרות",
+                                key="otp_input", label_visibility="collapsed",
+                                autocomplete="off").strip()
 
         c1, c2 = st.columns([1, 1])
         with c1:
@@ -268,7 +221,6 @@ if st.session_state.page == "login":
                             del st.session_state[k]
                     clear_login_inputs_only()
                     st.rerun()
-
                 correct_code = st.session_state.get("otp_code", "")
                 if code_in == correct_code and code_in:
                     st.session_state.logged_in = True
@@ -290,7 +242,6 @@ if st.session_state.page == "login":
                         st.rerun()
                     else:
                         st.error(f"קוד שגוי. נותרו {remaining} ניסיונות.")
-
         with c2:
             if st.button("התחל מחדש"):
                 for k in ["otp_sent", "otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
@@ -311,7 +262,6 @@ elif st.session_state.page == "welcome":
 
     user_name = st.session_state.get("user_name", "משתמש")
 
-    # שורת משתמש
     st.markdown(f"""
         <div style="display:flex; align-items:center; justify-content:flex-end;
                     gap:8px; margin-bottom:20px;">
@@ -320,7 +270,6 @@ elif st.session_state.page == "welcome":
         </div>
     """, unsafe_allow_html=True)
 
-    # כותרת
     st.markdown("""
         <div style="text-align:right; font-size:1rem; color:#222;
                     margin-bottom:32px; line-height:1.7;">
@@ -329,7 +278,6 @@ elif st.session_state.page == "welcome":
         </div>
     """, unsafe_allow_html=True)
 
-    # כפתורים — מוזחים פנימה מהקצה הימני
     _space, col1, col2, _end = st.columns([0.15, 1, 1, 2])
     with col1:
         st.markdown('<div class="menu-btn">', unsafe_allow_html=True)
