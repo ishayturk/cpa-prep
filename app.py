@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA57
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA58
 
 import streamlit as st
 import smtplib
@@ -355,7 +355,8 @@ elif st.session_state.page in ("study", "lesson"):
         for i, sub in enumerate(subs):
             with cols[i]:
                 is_selected = sub == st.session_state.get("selected_sub")
-                is_disabled = bool(is_selected or (loading and not is_selected))
+                lesson_loaded = bool(st.session_state.get("lesson_txt"))
+                is_disabled = bool((is_selected and not lesson_loaded) or (loading and not is_selected))
                 if st.button(sub, key=f"sub_{sub}", disabled=is_disabled):
                     st.session_state.selected_sub = sub
                     st.session_state.lesson_txt = ""
