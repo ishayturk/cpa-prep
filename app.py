@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA60
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA61
 
 import streamlit as st
 import smtplib
@@ -334,10 +334,6 @@ elif st.session_state.page in ("study", "lesson"):
     """, unsafe_allow_html=True)
     st.markdown("### 📚 שיעורי לימוד")
 
-    # החל תת נושא ממתין
-    if st.session_state.get("pending_sub"):
-        st.session_state.selected_sub = st.session_state.pop("pending_sub")
-
     # בחירת נושא — dropdown
     current_topic = st.session_state.get("selected_topic", "בחר...")
     topic_options = ["בחר..."] + list(SYLLABUS.keys())
@@ -355,11 +351,13 @@ elif st.session_state.page in ("study", "lesson"):
         st.markdown(f"**{selected_topic}** — בחר תת נושא:")
         subs = SYLLABUS[selected_topic]
         cols = st.columns(len(subs))
+        loading = bool(st.session_state.get("selected_sub") and not st.session_state.get("lesson_txt"))
         for i, sub in enumerate(subs):
             with cols[i]:
-                if st.button(sub, key=f"sub_{sub}"):
-                    st.session_state.pending_sub = sub
-                    st.session_state.selected_sub = None
+                is_active_sub = sub == st.session_state.get("selected_sub")
+                is_disabled = bool(loading or is_active_sub)
+                if st.button(sub, key=f"sub_{sub}", disabled=is_disabled):
+                    st.session_state.selected_sub = sub
                     st.session_state.lesson_txt = ""
                     st.session_state.page = "lesson"
                     st.rerun()
