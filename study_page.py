@@ -1,4 +1,4 @@
-# study_page.py | Version: v1.2
+# study_page.py | Version: v1.3
 
 import streamlit as st
 import google.generativeai as genai
@@ -18,10 +18,9 @@ def render_study(logo_tag):
 
     if selected_topic != current_topic:
         st.session_state.selected_topic = selected_topic
-        st.session_state.selected_sub = None
-        st.session_state.lesson_txt = ""
-        st.session_state.is_loading = False
-        st.session_state.quiz_questions = None
+        for k in ["selected_sub", "lesson_txt", "is_loading", "quiz_questions", "quiz_idx", "quiz_answers", "quiz_checked", "quiz_show_summary", "show_quiz"]:
+            st.session_state.pop(k, None)
+        st.session_state.selected_topic = selected_topic
         st.rerun()
 
     # תתי נושאים
@@ -35,10 +34,10 @@ def render_study(logo_tag):
                 is_active_sub = sub == st.session_state.get("selected_sub")
                 is_disabled = bool(is_loading or is_active_sub)
                 if st.button(sub, key=f"sub_{sub}", disabled=is_disabled):
+                    for k in ["lesson_txt", "quiz_questions", "quiz_idx", "quiz_answers", "quiz_checked", "quiz_show_summary", "show_quiz"]:
+                        st.session_state.pop(k, None)
                     st.session_state.selected_sub = sub
-                    st.session_state.lesson_txt = ""
                     st.session_state.is_loading = True
-                    st.session_state.quiz_questions = None
                     st.session_state.page = "lesson"
                     st.rerun()
 
