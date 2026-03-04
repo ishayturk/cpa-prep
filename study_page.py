@@ -1,4 +1,4 @@
-# study_page.py | Version: v1.6
+# study_page.py | Version: v1.7
 
 import streamlit as st
 import google.generativeai as genai
@@ -6,7 +6,7 @@ import json, re, threading
 from utils import SYLLABUS, clean_lesson, render_top_bar
 
 QUIZ_KEYS = ["quiz_questions", "quiz_idx", "quiz_answers", "quiz_checked",
-             "quiz_show_summary", "show_quiz", "quiz_type"]
+             "quiz_show_summary", "show_quiz", "quiz_type", "quiz_total"]
 
 
 def _clear_quiz():
@@ -79,6 +79,7 @@ def _start_quiz(selected_topic, selected_sub, lesson_txt, total, subs=None):
     """מתחיל שאלון — מייצר שאלה 1 מיידית ומפעיל רקע"""
     _clear_quiz()
     st.session_state.show_quiz = True
+    st.session_state.quiz_total = total
     q1 = _generate_one_question(selected_topic, selected_sub, lesson_txt, 1, total, [], subs=subs)
     if q1:
         st.session_state.quiz_questions = [q1]
@@ -204,8 +205,7 @@ def _render_inline_quiz():
     topic = st.session_state.get("selected_topic", "")
     questions = st.session_state.get("quiz_questions", [])
     subs = SYLLABUS.get(topic, [])
-    is_topic_quiz = bool(st.session_state.get("quiz_type") == "topic" or len(subs) > 1)
-    total_expected = 15 if (st.session_state.get("subs") or len(subs) > 0 and len(questions) > 10) else 10
+    total_expected = st.session_state.get("quiz_total", 10)
 
     st.divider()
     title = f"שאלון נושא: {topic}" if total_expected == 15 else f"שאלון: {sub}"
@@ -216,7 +216,7 @@ def _render_inline_quiz():
         return
 
     if st.session_state.get("quiz_show_summary"):
-        _render_summary(questions, sub, topic, total_expected)
+        _render_summary(questions, sub, topic, st.session_state.get("quiz_total", 10))
         return
 
     idx = st.session_state.get("quiz_idx", 0)
