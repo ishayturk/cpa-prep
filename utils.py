@@ -1,4 +1,4 @@
-# utils.py | Version: v1.3
+# utils.py | Version: v1.4
 
 import streamlit as st
 import smtplib
@@ -121,6 +121,15 @@ def inject_css():
   }
   .menu-btn>button:hover {
     background-color: #243d75 !important;
+  }
+
+  /* desktop/mobile show-hide */
+  .desktop-only { display: block; }
+  .mobile-only  { display: none; }
+
+  @media (max-width: 768px) {
+    .desktop-only { display: none; }
+    .mobile-only  { display: block; }
   }
 </style>
 """, unsafe_allow_html=True)
