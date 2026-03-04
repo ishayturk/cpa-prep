@@ -1,4 +1,4 @@
-# study_page.py | Version: v2.2
+# study_page.py | Version: v2.3
 
 import streamlit as st
 import google.generativeai as genai
@@ -223,27 +223,21 @@ def render_study(logo_tag):
             # תפריט תחתון
             quiz_open = st.session_state.get("show_quiz", False)
             st.divider()
-            st.markdown("""
-            <style>
-            @media (max-width: 768px) {
-                div[data-testid="column"] { min-width: 0 !important; }
-                div[data-testid="stHorizontalBlock"] > div[data-testid="column"] > div > div > button { font-size: 0.75rem !important; padding: 8px 4px !important; }
-            }
-            </style>
-            """, unsafe_allow_html=True)
-
-            c1, c2, c3, c4 = st.columns(4)
-            with c1:
+            # שורה 1
+            r1c1, r1c2 = st.columns(2)
+            with r1c1:
                 if st.button("📝 שאלון שיעור", key="lesson_quiz_sub", disabled=quiz_open, use_container_width=True):
                     _start_quiz(selected_topic, selected_sub, st.session_state.get("lesson_txt",""), total=10)
                     st.rerun()
-            with c2:
+            with r1c2:
                 if st.button("📋 שאלון מורחב", key="lesson_quiz_topic", disabled=quiz_open, use_container_width=True):
                     _start_quiz(selected_topic, selected_sub, st.session_state.get("lesson_txt",""), total=15, subs=SYLLABUS.get(selected_topic,[]))
                     st.rerun()
-            with c3:
+            # שורה 2
+            r2c1, r2c2 = st.columns(2)
+            with r2c1:
                 st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;border:1px solid #ddd;border-radius:8px;">⬆️ למעלה</a>', unsafe_allow_html=True)
-            with c4:
+            with r2c2:
                 if st.button("🏠 תפריט ראשי", key="lesson_home", use_container_width=True):
                     for k in ["selected_topic", "selected_sub", "lesson_txt", "is_loading"] + QUIZ_KEYS:
                         st.session_state.pop(k, None)
