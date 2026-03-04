@@ -1,4 +1,4 @@
-# quiz_page.py | Version: v1.0
+# quiz_page.py | Version: v1.1
 # quiz_page.py — שאלון תת נושא
 
 import streamlit as st
@@ -211,3 +211,5 @@ def render_top_bar_inline(logo_tag):
             <div class="logo-wrap" style="margin:0;">{logo_tag}</div>
         </div>
     """, unsafe_allow_html=True)
+
+# סוף קובץ
