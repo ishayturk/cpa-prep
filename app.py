@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA26
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA27
 
 import streamlit as st
 import smtplib
@@ -118,6 +118,17 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------
+# Syllabus
+# -------------------------
+SYLLABUS = {
+    "חשבונאות פיננסית": ["הכנת דוחות כספיים", "תקני דיווח בינלאומיים (IFRS)", "מאזנים ומכשירי הון"],
+    "ביקורת": ["עקרונות הביקורת", "ביקורת פנימית וחיצונית", "דוחות המבקר"],
+    "מיסוי": ["מס הכנסה", "מיסוי מקרקעין", 'מע"מ ומיסוי בינלאומי'],
+    "משפט": ["דיני תאגידים", "דיני חוזים", "דיני ניירות ערך"],
+    "כלכלה וניהול פיננסי": ["ניתוח דוחות", "הערכות שווי", "ניהול סיכונים"],
+}
+
+# -------------------------
 # Helpers
 # -------------------------
 def send_otp_email(to_email: str, code: str) -> bool:
@@ -153,17 +164,6 @@ def reset_login_flow(full: bool = True):
 
 
 # -------------------------
-# Syllabus
-# -------------------------
-SYLLABUS = {
-    "חשבונאות פיננסית": ["הכנת דוחות כספיים", "תקני דיווח בינלאומיים (IFRS)", "מאזנים ומכשירי הון"],
-    "ביקורת": ["עקרונות הביקורת", "ביקורת פנימית וחיצונית", "דוחות המבקר"],
-    "מיסוי": ["מס הכנסה", "מיסוי מקרקעין", "מע\"מ ומיסוי בינלאומי"],
-    "משפט": ["דיני תאגידים", "דיני חוזים", "דיני ניירות ערך"],
-    "כלכלה וניהול פיננסי": ["ניתוח דוחות", "הערכות שווי", "ניהול סיכונים"],
-}
-
-# -------------------------
 # State init
 # -------------------------
 if "logged_in" not in st.session_state:
@@ -196,19 +196,6 @@ if st.session_state.page == "login":
                       key="login_email", label_visibility="collapsed", autocomplete="off")
 
         st.markdown('<div class="hint">להשלמת הכניסה לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
-        st.markdown("""
-        <script>
-        (function() {
-            var inputs = window.parent.document.querySelectorAll('input[aria-label="מייל"], input[placeholder="כתובת מייל"]');
-            inputs.forEach(function(el) { el.type = 'email'; el.autocomplete = 'email'; });
-            var obs = new MutationObserver(function() {
-                var inputs = window.parent.document.querySelectorAll('input[placeholder="כתובת מייל"]');
-                inputs.forEach(function(el) { el.type = 'email'; el.autocomplete = 'email'; });
-            });
-            obs.observe(window.parent.document.body, {childList: true, subtree: true});
-        })();
-        </script>
-        """, unsafe_allow_html=True)
 
         if st.button("שלח קוד"):
             name = st.session_state.get("login_name", "").strip()
@@ -321,17 +308,8 @@ elif st.session_state.page == "welcome":
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    _s, col_out = st.columns([3, 1])
-    with col_out:
-        if st.button("יציאה"):
-            st.session_state.logged_in = False
-            st.session_state.page = "login"
-            reset_login_flow(full=False)
-            clear_login_inputs_only()
-            st.rerun()
-
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 # -------------------------
 # STUDY PAGE (בחירת נושא)
@@ -350,42 +328,21 @@ elif st.session_state.page == "study":
     """, unsafe_allow_html=True)
 
     st.markdown("### 📚 שיעורי לימוד")
-    st.markdown("<div style='margin-bottom:16px;'>בחר נושא:</div>", unsafe_allow_html=True)
 
-    for topic in SYLLABUS:
-        if st.button(topic, key=f"topic_{topic}"):
-            st.session_state.selected_topic = topic
-            st.session_state.page = "subtopic"
-            st.rerun()
+    selected_topic = st.selectbox("בחר נושא:", ["בחר..."] + list(SYLLABUS.keys()),
+                                   label_visibility="collapsed")
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
-
-# -------------------------
-# SUBTOPIC PAGE (בחירת תת נושא)
-# -------------------------
-elif st.session_state.page == "subtopic":
-    st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
-
-    user_name = st.session_state.get("user_name", "משתמש")
-    st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:flex-end;
-                    gap:8px; margin-bottom:20px;">
-            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
-            <span style="font-size:1.5rem;">👤</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-    topic = st.session_state.get("selected_topic", "")
-    st.markdown(f"### 📖 {topic}")
-    st.markdown("<div style='margin-bottom:16px;'>בחר תת נושא ללימוד:</div>", unsafe_allow_html=True)
-
-    for sub in SYLLABUS.get(topic, []):
-        if st.button(sub, key=f"sub_{sub}"):
-            st.session_state.selected_sub = sub
-            st.session_state.page = "lesson"
-            st.rerun()
+    if selected_topic and selected_topic != "בחר...":
+        st.markdown("#### בחר תת נושא ללימוד:")
+        subs = SYLLABUS[selected_topic]
+        cols = st.columns(len(subs))
+        for i, sub in enumerate(subs):
+            with cols[i]:
+                if st.button(sub, key=f"sub_{sub}"):
+                    st.session_state.selected_topic = selected_topic
+                    st.session_state.selected_sub = sub
+                    st.session_state.page = "lesson"
+                    st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
