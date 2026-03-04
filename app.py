@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA50
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA51
 
 import streamlit as st
 import smtplib
@@ -387,6 +387,10 @@ elif st.session_state.page in ("study", "lesson"):
                         full_text += chunk.text
                         placeholder.markdown(full_text + "▌")
                 # הסר שורה ראשונה אם היא כותרת
+                lines = full_text.split("\n")
+                while lines and lines[0].strip().startswith("#"):
+                    lines.pop(0)
+                full_text = "\n".join(lines).lstrip("\n")
                 lines = full_text.split("\n")
                 while lines and lines[0].strip().startswith("#"):
                     lines.pop(0)
