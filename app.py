@@ -1,8 +1,8 @@
-# File: app.py | Version: CPA65
+# File: app.py | Version: CPA66
 
 import streamlit as st
 from PIL import Image
-from utils import inject_css, get_logo_tag, send_otp_email, clear_login_inputs_only, reset_login_flow
+from utils import inject_css, get_logo_tag, send_otp_email, clear_login_inputs_only, reset_login_flow, render_top_bar
 from study_page import render_study
 from quiz_page import render_quiz, render_quiz_summary
 import random
@@ -128,15 +128,8 @@ if st.session_state.page == "login":
 
 elif st.session_state.page == "welcome":
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
-    user_name = st.session_state.get("user_name", "משתמש")
-    st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:flex-end;
-                    gap:8px; margin-bottom:20px;">
-            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
-            <span style="font-size:1.5rem;">👤</span>
-        </div>
-    """, unsafe_allow_html=True)
+    from utils import render_top_bar
+    render_top_bar(logo_tag)
     st.markdown("""
         <div style="text-align:right; font-size:1rem; color:#222;
                     margin-bottom:32px; line-height:1.7;">
