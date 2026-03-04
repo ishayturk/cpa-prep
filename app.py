@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA52
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA53
 
 import streamlit as st
 import smtplib
@@ -133,9 +133,9 @@ SYLLABUS = {
 # -------------------------
 def clean_lesson(txt):
     lines = txt.split("\n")
-    while lines and lines[0].strip().startswith("#"):
+    while lines and (lines[0].strip() == "" or lines[0].strip().startswith("#")):
         lines.pop(0)
-    return "\n".join(lines).lstrip("\n")
+    return "\n".join(lines)
 def send_otp_email(to_email: str, code: str) -> bool:
     try:
         gmail_user = st.secrets["GMAIL_USER"]
