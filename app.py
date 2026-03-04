@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA34
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA36
 
 import streamlit as st
 import smtplib
@@ -348,7 +348,7 @@ elif st.session_state.page == "study":
 
 
 # -------------------------
-# LESSON PAGE (בדיקת Gemini)
+# LESSON PAGE
 # -------------------------
 elif st.session_state.page == "lesson":
     import google.generativeai as genai
@@ -356,16 +356,67 @@ elif st.session_state.page == "lesson":
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
 
+    user_name = st.session_state.get("user_name", "משתמש")
+    st.markdown(f"""
+        <div style="display:flex; align-items:center; justify-content:flex-end;
+                    gap:8px; margin-bottom:20px;">
+            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
+            <span style="font-size:1.5rem;">👤</span>
+        </div>
+    """, unsafe_allow_html=True)
+
+    topic = st.session_state.get("selected_topic", "")
     sub = st.session_state.get("selected_sub", "")
     st.markdown(f"### 📖 {sub}")
+    st.markdown(f"*נושא: {topic}*")
+    st.divider()
 
-    try:
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        model = genai.GenerativeModel("gemini-2.0-flash")
-        model.generate_content("ping")
-        st.success("✅ Gemini עובד — מוכן לטעון שיעורים")
-    except Exception as e:
-        st.error(f"❌ שגיאה: {e}")
+    # טעינת שיעור — סטרימינג
+    if not st.session_state.get("lesson_txt"):
+        try:
+            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+            model = genai.GenerativeModel("gemini-2.0-flash")
+            prompt = f"""אתה מרצה מומחה לחשבונאות ורואי חשבון.
+כתוב שיעור הכנה מקיף ומעמיק למבחן מועצת רואי החשבון בנושא: {sub} (חלק מנושא {topic}).
+השיעור צריך לכסות את כל מה שסטודנט צריך לדעת לבחינה.
+כתוב בעברית, בצורה ברורה ומובנית עם כותרות, דוגמאות ומקורות."""
+
+            placeholder = st.empty()
+            full_text = ""
+            response = model.generate_content(prompt, stream=True)
+            for chunk in response:
+                if chunk.text:
+                    full_text += chunk.text
+                    placeholder.markdown(full_text + "▌")
+            placeholder.markdown(full_text)
+            st.session_state.lesson_txt = full_text
+
+        except Exception as e:
+            st.error(f"שגיאה בטעינת השיעור: {e}")
+
+    else:
+        st.markdown(st.session_state.get("lesson_txt", ""))
+
+    # כפתורים — מופיעים רק אחרי שהשיעור נטען
+    if st.session_state.get("lesson_txt"):
+        st.divider()
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            if st.button("📝 שאלון תת נושא"):
+                st.session_state.page = "quiz_sub"
+                st.rerun()
+        with c2:
+            if st.button("📋 שאלון נושא כללי"):
+                st.session_state.page = "quiz_topic"
+                st.rerun()
+        with c3:
+            if st.button("⬆️ ראש העמוד"):
+                st.rerun()
+        with c4:
+            if st.button("🏠 תפריט ראשי"):
+                st.session_state.lesson_txt = ""
+                st.session_state.page = "welcome"
+                st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
