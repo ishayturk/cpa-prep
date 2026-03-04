@@ -1,4 +1,4 @@
-# study_page.py | Version: v1.1
+# study_page.py | Version: v1.2
 
 import streamlit as st
 import google.generativeai as genai
@@ -105,6 +105,8 @@ def render_study(logo_tag):
                 st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;">⬆️ לראש העמוד</a>', unsafe_allow_html=True)
             with c4:
                 if st.button("🏠 תפריט ראשי", key="lesson_home"):
+                    for k in ["selected_topic", "selected_sub", "lesson_txt", "is_loading", "quiz_questions", "quiz_idx", "quiz_answers", "quiz_checked", "quiz_show_summary", "show_quiz"]:
+                        st.session_state.pop(k, None)
                     st.session_state.page = "welcome"
                     st.rerun()
 
@@ -187,9 +189,11 @@ def _render_inline_quiz():
             options=list(range(len(q["answers"]))),
             format_func=lambda i: q["answers"][i],
             key=f"quiz_radio_{idx}",
-            index=selected if selected is not None else 0,
+            index=None,
             label_visibility="collapsed"
         )
+        if choice is not None:
+            st.session_state.quiz_answers[idx] = choice
         st.session_state.quiz_answers[idx] = choice
     else:
         correct_idx = q["correct"]
@@ -203,7 +207,7 @@ def _render_inline_quiz():
     # תפריט שאלון
     st.markdown('<div style="background:#f0f4f8; padding:10px; border-radius:10px; margin-top:16px;">', unsafe_allow_html=True)
     is_last = idx == total - 1
-    has_answer = selected is not None
+    has_answer = st.session_state.quiz_answers[idx] is not None
     qc1, qc2, qc3 = st.columns(3)
     with qc1:
         if st.button("בדוק תשובה", disabled=(not has_answer or checked), key=f"check_{idx}"):
@@ -238,3 +242,5 @@ def _render_summary(questions, sub):
         st.session_state.quiz_show_summary = False
         st.session_state.show_quiz = True
         st.rerun()
+
+# סוף קובץ
