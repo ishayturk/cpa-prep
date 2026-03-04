@@ -1,11 +1,12 @@
-# study_page.py | Version: v1.5
+# study_page.py | Version: v1.6
 
 import streamlit as st
 import google.generativeai as genai
 import json, re, threading
 from utils import SYLLABUS, clean_lesson, render_top_bar
 
-QUIZ_KEYS = ["quiz_questions", "quiz_idx", "quiz_answers", "quiz_checked", "quiz_show_summary", "show_quiz", "quiz_questions_pending", "quiz_thread"]
+QUIZ_KEYS = ["quiz_questions", "quiz_idx", "quiz_answers", "quiz_checked",
+             "quiz_show_summary", "show_quiz", "quiz_type"]
 
 
 def _clear_quiz():
@@ -13,19 +14,23 @@ def _clear_quiz():
         st.session_state.pop(k, None)
 
 
-def _generate_one_question(topic, sub, lesson_txt, q_number, total, existing_qs):
-    """מייצר שאלה אחת ומחזיר dict"""
+def _generate_one_question(topic, sub, lesson_txt, q_number, total, existing_qs, subs=None):
+    """מייצר שאלה אחת"""
     try:
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
         model = genai.GenerativeModel("gemini-2.0-flash")
         existing_json = json.dumps(existing_qs, ensure_ascii=False) if existing_qs else "[]"
-        prompt = f"""בהתבסס על חומר השיעור הבא בנושא "{sub}" (חלק מ"{topic}"):
 
----
-{lesson_txt[:5000]}
----
+        if subs:
+            context = f"נושא: {topic}\nתתי נושאים: {', '.join(subs)}\n\nחומר שיעור:\n{lesson_txt[:5000]}"
+            instruction = f"צור שאלה מספר {q_number} מתוך {total} — וודא שהשאלות מכסות את כל תתי הנושאים באופן מאוזן"
+        else:
+            context = f"נושא: {topic} — {sub}\n\nחומר שיעור:\n{lesson_txt[:5000]}"
+            instruction = f"צור שאלה מספר {q_number} מתוך {total} על החומר הנלמד"
 
-צור שאלה אמריקאית מספר {q_number} מתוך {total} לבחינת הבנה עמוקה.
+        prompt = f"""{context}
+
+{instruction}
 שאלות שכבר נוצרו (אל תחזור עליהן): {existing_json}
 
 כללים:
@@ -48,21 +53,19 @@ def _generate_one_question(topic, sub, lesson_txt, q_number, total, existing_qs)
         return None
 
 
-def _background_generate(topic, sub, lesson_txt, total=10):
-    """מייצר שאלות אחת אחת ומוסיף ל-session_state"""
-    for i in range(total):
-        # בדוק אם עוד צריך
+def _background_generate(topic, sub, lesson_txt, total, subs=None):
+    """מייצר שאלות 2-total ברקע"""
+    for i in range(1, total):
         if not st.session_state.get("show_quiz"):
             break
         existing = st.session_state.get("quiz_questions", [])
         if len(existing) >= total:
             break
-        q = _generate_one_question(topic, sub, lesson_txt, i + 1, total, existing)
+        q = _generate_one_question(topic, sub, lesson_txt, i + 1, total, existing, subs=subs)
         if q:
             current = st.session_state.get("quiz_questions", [])
             if len(current) < total:
                 st.session_state.quiz_questions = current + [q]
-                # אתחל תשובות אם צריך
                 answers = st.session_state.get("quiz_answers", [])
                 checked = st.session_state.get("quiz_checked", [])
                 while len(answers) < len(st.session_state.quiz_questions):
@@ -70,6 +73,24 @@ def _background_generate(topic, sub, lesson_txt, total=10):
                     checked.append(False)
                 st.session_state.quiz_answers = answers
                 st.session_state.quiz_checked = checked
+
+
+def _start_quiz(selected_topic, selected_sub, lesson_txt, total, subs=None):
+    """מתחיל שאלון — מייצר שאלה 1 מיידית ומפעיל רקע"""
+    _clear_quiz()
+    st.session_state.show_quiz = True
+    q1 = _generate_one_question(selected_topic, selected_sub, lesson_txt, 1, total, [], subs=subs)
+    if q1:
+        st.session_state.quiz_questions = [q1]
+        st.session_state.quiz_idx = 0
+        st.session_state.quiz_answers = [None]
+        st.session_state.quiz_checked = [False]
+        t = threading.Thread(
+            target=_background_generate,
+            args=(selected_topic, selected_sub, lesson_txt, total, subs),
+            daemon=True
+        )
+        t.start()
 
 
 def render_study(logo_tag):
@@ -151,31 +172,21 @@ def render_study(logo_tag):
             if st.session_state.get("show_quiz"):
                 _render_inline_quiz()
 
+            # תפריט תחתון
+            quiz_open = st.session_state.get("show_quiz", False)
             st.divider()
             c1, c2, c3, c4 = st.columns(4)
             with c1:
-                quiz_open = st.session_state.get("show_quiz", False)
                 if st.button("📝 שאלון תת נושא", key="lesson_quiz_sub", disabled=quiz_open):
-                    _clear_quiz()
-                    st.session_state.show_quiz = True
-                    # יצירת שאלה ראשונה מיידית
                     lesson_txt = st.session_state.get("lesson_txt", "")
-                    q1 = _generate_one_question(selected_topic, selected_sub, lesson_txt, 1, 10, [])
-                    if q1:
-                        st.session_state.quiz_questions = [q1]
-                        st.session_state.quiz_idx = 0
-                        st.session_state.quiz_answers = [None]
-                        st.session_state.quiz_checked = [False]
-                        # יצירת שאר השאלות ברקע
-                        t = threading.Thread(
-                            target=_background_generate,
-                            args=(selected_topic, selected_sub, lesson_txt),
-                            daemon=True
-                        )
-                        t.start()
+                    _start_quiz(selected_topic, selected_sub, lesson_txt, total=10)
                     st.rerun()
             with c2:
-                st.button("📋 שאלון נושא כללי", disabled=True, key="lesson_quiz_topic")
+                if st.button("📋 שאלון נושא כללי", key="lesson_quiz_topic", disabled=quiz_open):
+                    lesson_txt = st.session_state.get("lesson_txt", "")
+                    all_subs = SYLLABUS.get(selected_topic, [])
+                    _start_quiz(selected_topic, selected_sub, lesson_txt, total=15, subs=all_subs)
+                    st.rerun()
             with c3:
                 st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;">⬆️ לראש העמוד</a>', unsafe_allow_html=True)
             with c4:
@@ -190,26 +201,29 @@ def render_study(logo_tag):
 
 def _render_inline_quiz():
     sub = st.session_state.get("selected_sub", "")
+    topic = st.session_state.get("selected_topic", "")
     questions = st.session_state.get("quiz_questions", [])
+    subs = SYLLABUS.get(topic, [])
+    is_topic_quiz = bool(st.session_state.get("quiz_type") == "topic" or len(subs) > 1)
+    total_expected = 15 if (st.session_state.get("subs") or len(subs) > 0 and len(questions) > 10) else 10
 
     st.divider()
-    st.markdown(f"### 📝 שאלון: {sub}")
+    title = f"שאלון נושא: {topic}" if total_expected == 15 else f"שאלון: {sub}"
+    st.markdown(f"### 📝 {title}")
 
     if not questions:
         st.info("מכין שאלה ראשונה...")
         return
 
     if st.session_state.get("quiz_show_summary"):
-        _render_summary(questions, sub)
+        _render_summary(questions, sub, topic, total_expected)
         return
 
     idx = st.session_state.get("quiz_idx", 0)
-    # אם הגענו לשאלה שעוד לא מוכנה
     if idx >= len(questions):
         st.info("מכין את השאלה הבאה...")
         return
 
-    total_expected = 10
     q = questions[idx]
     checked = st.session_state.quiz_checked[idx]
     selected = st.session_state.quiz_answers[idx]
@@ -252,8 +266,7 @@ def _render_inline_quiz():
         if is_last:
             st.button("לשאלה הבאה", disabled=True, key=f"next_{idx}")
         else:
-            next_disabled = not checked or not next_ready
-            if st.button("לשאלה הבאה", disabled=next_disabled, key=f"next_{idx}"):
+            if st.button("לשאלה הבאה", disabled=(not checked or not next_ready), key=f"next_{idx}"):
                 st.session_state.quiz_idx += 1
                 st.rerun()
     with qc3:
@@ -263,30 +276,18 @@ def _render_inline_quiz():
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-def _render_summary(questions, sub):
+def _render_summary(questions, sub, topic, total_expected):
     answers = st.session_state.get("quiz_answers", [])
     total = len(questions)
     correct = sum(1 for i, q in enumerate(questions) if i < len(answers) and answers[i] == q["correct"])
+    title = f"סיכום שאלון נושא: {topic}" if total_expected == 15 else f"סיכום שאלון: {sub}"
     st.divider()
-    st.markdown(f"### סיכום שאלון: {sub}")
+    st.markdown(f"### {title}")
     st.markdown(f"**ענית נכון על {correct} מתוך {total} שאלות**")
     if st.button("📝 שאלון חדש", key="new_quiz"):
-        topic = st.session_state.get("selected_topic", "")
         lesson_txt = st.session_state.get("lesson_txt", "")
-        _clear_quiz()
-        st.session_state.show_quiz = True
-        q1 = _generate_one_question(topic, sub, lesson_txt, 1, 10, [])
-        if q1:
-            st.session_state.quiz_questions = [q1]
-            st.session_state.quiz_idx = 0
-            st.session_state.quiz_answers = [None]
-            st.session_state.quiz_checked = [False]
-            t = threading.Thread(
-                target=_background_generate,
-                args=(topic, sub, lesson_txt),
-                daemon=True
-            )
-            t.start()
+        all_subs = SYLLABUS.get(topic, []) if total_expected == 15 else None
+        _start_quiz(topic, sub, lesson_txt, total=total_expected, subs=all_subs)
         st.rerun()
 
 # סוף קובץ
