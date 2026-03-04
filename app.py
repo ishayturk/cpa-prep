@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA25
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA26
 
 import streamlit as st
 import smtplib
@@ -78,6 +78,11 @@ st.markdown("""
     width: 50% !important;
     margin-right: 0 !important;
     margin-left: auto !important;
+  }
+  @media (max-width: 768px) {
+    div[data-testid="stTextInput"] {
+      width: 65% !important;
+    }
   }
   div[data-testid="stTextInput"] input {
     background: #ffffff !important;
