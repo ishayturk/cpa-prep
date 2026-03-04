@@ -1,4 +1,4 @@
-# utils.py | Version: v1.4
+\# utils.py | Version: v1.5
 
 import streamlit as st
 import smtplib
@@ -155,16 +155,13 @@ def clean_lesson(txt):
 
 def send_otp_email(to_email: str, code: str) -> bool:
     try:
-        gmail_user = st.secrets["GMAIL_USER"]
-        gmail_pass = st.secrets["GMAIL_PASS"]
-        msg = MIMEText(f"קוד הכניסה שלך לרואה חשבון בקליק: {code}\n\nהקוד תקף ל-2 דקות.")
-        msg["Subject"] = "קוד כניסה - רואה חשבון בקליק"
-        msg["From"] = gmail_user
-        msg["To"] = to_email
-        with smtplib.SMTP("smtp.gmail.com", 587) as s:
-            s.starttls()
-            s.login(gmail_user, gmail_pass)
-            s.send_message(msg)
+        resend.api_key = st.secrets["RESEND_API_KEY"]
+        resend.Emails.send({
+            "from": "onboarding@resend.dev",
+            "to": to_email,
+            "subject": "קוד כניסה - רואה חשבון בקליק",
+            "html": f"<p>קוד הכניסה שלך לרואה חשבון בקליק: <strong>{code}</strong></p><p>הקוד תקף ל-2 דקות.</p>"
+        })
         return True
     except Exception:
         return False
