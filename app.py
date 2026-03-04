@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA42
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA43
 
 import streamlit as st
 import smtplib
@@ -69,8 +69,8 @@ st.markdown("""
     margin-bottom: 4px;
   }
   .logo-wrap img {
-    width: 160px;
-    max-width: 45vw;
+    width: 128px;
+    max-width: 36vw;
     height: auto;
     display: block;
   }
@@ -312,74 +312,64 @@ elif st.session_state.page == "welcome":
 
 
 # -------------------------
-# STUDY PAGE (בחירת נושא)
+# STUDY PAGE — עמוד לימוד רציף
 # -------------------------
-elif st.session_state.page == "study":
-    st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
+elif st.session_state.page in ("study", "lesson"):
+    import google.generativeai as genai
 
     user_name = st.session_state.get("user_name", "משתמש")
+
+    # שם משתמש — מימין למעלה, שורה אחת מתחת לגמרי לראש
     st.markdown(f"""
         <div style="display:flex; align-items:center; justify-content:flex-end;
-                    gap:8px; margin-bottom:20px;">
-            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
-            <span style="font-size:1.5rem;">👤</span>
+                    gap:8px; margin-bottom:4px; margin-top:4px;">
+            <span style="font-size:0.9rem; font-weight:600;">{user_name}</span>
+            <span style="font-size:1.2rem;">👤</span>
         </div>
     """, unsafe_allow_html=True)
 
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
     st.markdown("### 📚 שיעורי לימוד")
 
-    selected_topic = st.selectbox("בחר נושא:", ["בחר..."] + list(SYLLABUS.keys()),
-                                   label_visibility="collapsed")
+    # בחירת נושא — dropdown
+    current_topic = st.session_state.get("selected_topic", "בחר...")
+    topic_options = ["בחר..."] + list(SYLLABUS.keys())
+    idx = topic_options.index(current_topic) if current_topic in topic_options else 0
+    selected_topic = st.selectbox("נושא:", topic_options, index=idx, label_visibility="collapsed")
 
+    if selected_topic != current_topic:
+        st.session_state.selected_topic = selected_topic
+        st.session_state.selected_sub = None
+        st.session_state.lesson_txt = ""
+        st.rerun()
+
+    # תתי נושאים — כפתורים באותה שורה
     if selected_topic and selected_topic != "בחר...":
-        st.markdown("#### בחר תת נושא ללימוד:")
+        st.markdown(f"**{selected_topic}** — בחר תת נושא:")
         subs = SYLLABUS[selected_topic]
         cols = st.columns(len(subs))
         for i, sub in enumerate(subs):
             with cols[i]:
                 if st.button(sub, key=f"sub_{sub}"):
-                    st.session_state.selected_topic = selected_topic
                     st.session_state.selected_sub = sub
+                    st.session_state.lesson_txt = ""
                     st.session_state.page = "lesson"
                     st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    # שיעור
+    selected_sub = st.session_state.get("selected_sub")
+    if selected_sub:
+        st.markdown(f"#### 📖 {selected_sub}")
+        st.divider()
 
+        if not st.session_state.get("lesson_txt"):
+            try:
+                genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+                model = genai.GenerativeModel("gemini-2.0-flash")
+                prompt = f"""אתה פרופסור בכיר למשפט עסקי וחשבונאות, המתמחה בהכנה למבחני מועצת רואי החשבון בישראל.
 
-# -------------------------
-# LESSON PAGE
-# -------------------------
-elif st.session_state.page == "lesson":
-    import google.generativeai as genai
-
-    st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
-
-    user_name = st.session_state.get("user_name", "משתמש")
-    st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:flex-end;
-                    gap:8px; margin-bottom:20px;">
-            <span style="font-size:1rem; font-weight:600;">{user_name}</span>
-            <span style="font-size:1.5rem;">👤</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-    topic = st.session_state.get("selected_topic", "")
-    sub = st.session_state.get("selected_sub", "")
-    st.markdown('<div id="top" style="margin-top:-60px; padding-top:60px;"></div>', unsafe_allow_html=True)
-    st.markdown(f"### 📖 {sub}")
-    st.markdown(f"*נושא: {topic}*")
-    st.divider()
-
-    # טעינת שיעור — סטרימינג
-    if not st.session_state.get("lesson_txt"):
-        try:
-            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-            model = genai.GenerativeModel("gemini-2.0-flash")
-            prompt = f"""אתה פרופסור בכיר למשפט עסקי וחשבונאות, המתמחה בהכנה למבחני מועצת רואי החשבון בישראל.
-
-כתוב שיעור מקיף ומעמיק ברמה אקדמית גבוהה בנושא: **{sub}** (חלק מנושא: {topic}).
+כתוב שיעור מקיף ומעמיק ברמה אקדמית גבוהה בנושא: **{selected_sub}** (חלק מנושא: {selected_topic}).
 
 דרישות מחייבות:
 - החומר חייב לכסות את כל מה שנדרש לבחינת הלשכה ברמה המלאה
@@ -390,40 +380,38 @@ elif st.session_state.page == "lesson":
 - רמה: סטודנט שעומד לגשת למבחן הלשכה ומצפה לחומר ברמה המקצועית הגבוהה ביותר
 - כתוב בעברית, מובנה עם כותרות וסעיפים ברורים"""
 
-            placeholder = st.empty()
-            full_text = ""
-            response = model.generate_content(prompt, stream=True)
-            for chunk in response:
-                if chunk.text:
-                    full_text += chunk.text
-                    placeholder.markdown(full_text + "▌")
-            placeholder.markdown(full_text)
-            st.session_state.lesson_txt = full_text
+                placeholder = st.empty()
+                full_text = ""
+                response = model.generate_content(prompt, stream=True)
+                for chunk in response:
+                    if chunk.text:
+                        full_text += chunk.text
+                        placeholder.markdown(full_text + "▌")
+                placeholder.markdown(full_text)
+                st.session_state.lesson_txt = full_text
 
-        except Exception as e:
-            st.error(f"שגיאה בטעינת השיעור: {e}")
+            except Exception as e:
+                st.error(f"שגיאה בטעינת השיעור: {e}")
 
-    else:
-        st.markdown(st.session_state.get("lesson_txt", ""))
+        else:
+            st.markdown(st.session_state.get("lesson_txt", ""))
 
-    # כפתורים — מופיעים רק אחרי שהשיעור נטען
-    if st.session_state.get("lesson_txt"):
-        st.divider()
-        c1, c2, c3, c4 = st.columns(4)
-        with c1:
-            st.button("📝 שאלון תת נושא", disabled=True)
-        with c2:
-            st.button("📋 שאלון נושא כללי", disabled=True)
-        with c3:
-            st.markdown("""
-            <a href="javascript:window.parent.document.querySelector('section.main').scrollTo(0,0);"
-               style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;">
-               ⬆️ לראש העמוד
-            </a>""", unsafe_allow_html=True)
-        with c4:
-            if st.button("🏠 תפריט ראשי"):
-                st.session_state.page = "welcome"
-                st.rerun()
+        # כפתורים אחרי שיעור
+        if st.session_state.get("lesson_txt"):
+            st.divider()
+            c1, c2, c3, c4 = st.columns(4)
+            with c1:
+                st.button("📝 שאלון תת נושא", disabled=True)
+            with c2:
+                st.button("📋 שאלון נושא כללי", disabled=True)
+            with c3:
+                if st.button("⬆️ לראש העמוד"):
+                    st.session_state.lesson_txt = st.session_state.get("lesson_txt", "")
+                    st.rerun()
+            with c4:
+                if st.button("🏠 תפריט ראשי"):
+                    st.session_state.page = "welcome"
+                    st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
