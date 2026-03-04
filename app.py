@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA56
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA57
 
 import streamlit as st
 import smtplib
@@ -351,11 +351,11 @@ elif st.session_state.page in ("study", "lesson"):
         st.markdown(f"**{selected_topic}** — בחר תת נושא:")
         subs = SYLLABUS[selected_topic]
         cols = st.columns(len(subs))
-        loading = st.session_state.get("selected_sub") and not st.session_state.get("lesson_txt")
+        loading = bool(st.session_state.get("selected_sub") and not st.session_state.get("lesson_txt"))
         for i, sub in enumerate(subs):
             with cols[i]:
                 is_selected = sub == st.session_state.get("selected_sub")
-                is_disabled = bool(is_selected or loading)
+                is_disabled = bool(is_selected or (loading and not is_selected))
                 if st.button(sub, key=f"sub_{sub}", disabled=is_disabled):
                     st.session_state.selected_sub = sub
                     st.session_state.lesson_txt = ""
