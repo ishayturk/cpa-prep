@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA24
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA25
 
 import streamlit as st
 import smtplib
@@ -191,6 +191,19 @@ if st.session_state.page == "login":
                       key="login_email", label_visibility="collapsed", autocomplete="off")
 
         st.markdown('<div class="hint">להשלמת הכניסה לחץ על הכפתור כדי לקבל קוד חד־פעמי למייל. הקוד תקף ל-2 דקות.</div>', unsafe_allow_html=True)
+        st.markdown("""
+        <script>
+        (function() {
+            var inputs = window.parent.document.querySelectorAll('input[aria-label="מייל"], input[placeholder="כתובת מייל"]');
+            inputs.forEach(function(el) { el.type = 'email'; el.autocomplete = 'email'; });
+            var obs = new MutationObserver(function() {
+                var inputs = window.parent.document.querySelectorAll('input[placeholder="כתובת מייל"]');
+                inputs.forEach(function(el) { el.type = 'email'; el.autocomplete = 'email'; });
+            });
+            obs.observe(window.parent.document.body, {childList: true, subtree: true});
+        })();
+        </script>
+        """, unsafe_allow_html=True)
 
         if st.button("שלח קוד"):
             name = st.session_state.get("login_name", "").strip()
@@ -332,27 +345,19 @@ elif st.session_state.page == "study":
     """, unsafe_allow_html=True)
 
     st.markdown("### 📚 שיעורי לימוד")
+    st.markdown("<div style='margin-bottom:16px;'>בחר נושא:</div>", unsafe_allow_html=True)
 
-    selected_topic = st.selectbox("בחר נושא:", ["בחר..."] + list(SYLLABUS.keys()),
-                                   label_visibility="collapsed")
-
-    if selected_topic and selected_topic != "בחר...":
-        st.markdown("#### בחר תת נושא ללימוד:")
-        subs = SYLLABUS[selected_topic]
-        cols = st.columns(len(subs))
-        for i, sub in enumerate(subs):
-            with cols[i]:
-                if st.button(sub, key=f"sub_{sub}"):
-                    st.session_state.selected_topic = selected_topic
-                    st.session_state.selected_sub = sub
-                    st.session_state.page = "lesson"
-                    st.rerun()
+    for topic in SYLLABUS:
+        if st.button(topic, key=f"topic_{topic}"):
+            st.session_state.selected_topic = topic
+            st.session_state.page = "subtopic"
+            st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
 # -------------------------
-# SUBTOPIC PAGE (בחירת תת נושא) - kept for backwards compat
+# SUBTOPIC PAGE (בחירת תת נושא)
 # -------------------------
 elif st.session_state.page == "subtopic":
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
