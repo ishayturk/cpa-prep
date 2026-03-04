@@ -1,5 +1,4 @@
-# utils.py | Version: v1.0
-# utils.py — פונקציות משותפות
+# utils.py | Version: v1.1
 
 import streamlit as st
 import smtplib
@@ -32,6 +31,21 @@ def get_logo_tag():
     if logo_b64:
         return f'<img src="data:image/png;base64,{logo_b64}" alt="logo">'
     return '<span style="font-size:2rem;">✅</span>'
+
+# -------------------------
+# Top bar — לוגו שמאל, שם משתמש ימין
+# -------------------------
+def render_top_bar(logo_tag):
+    user_name = st.session_state.get("user_name", "משתמש")
+    st.markdown(f"""
+        <div id="top" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:6px; margin-right:16px;">
+                <span style="font-size:0.9rem; font-weight:600;">{user_name}</span>
+                <span style="font-size:1.2rem;">👤</span>
+            </div>
+            <div class="logo-wrap" style="margin:0;">{logo_tag}</div>
+        </div>
+    """, unsafe_allow_html=True)
 
 # -------------------------
 # CSS
@@ -148,15 +162,3 @@ def reset_login_flow(full: bool = True):
     for k in keys:
         if k in st.session_state:
             del st.session_state[k]
-
-def render_top_bar(logo_tag):
-    user_name = st.session_state.get("user_name", "משתמש")
-    st.markdown(f"""
-        <div id="top" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-            <div style="display:flex; align-items:center; gap:6px; margin-right:16px;">
-                <span style="font-size:0.9rem; font-weight:600;">{user_name}</span>
-                <span style="font-size:1.2rem;">👤</span>
-            </div>
-            <div class="logo-wrap" style="margin:0;">{logo_tag}</div>
-        </div>
-    """, unsafe_allow_html=True)
