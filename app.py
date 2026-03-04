@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA27
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA28
 
 import streamlit as st
 import smtplib
@@ -343,6 +343,29 @@ elif st.session_state.page == "study":
                     st.session_state.selected_sub = sub
                     st.session_state.page = "lesson"
                     st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# -------------------------
+# LESSON PAGE (בדיקת Gemini)
+# -------------------------
+elif st.session_state.page == "lesson":
+    import google.generativeai as genai
+
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
+
+    sub = st.session_state.get("selected_sub", "")
+    st.markdown(f"### 📖 {sub}")
+
+    try:
+        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        model.generate_content("ping")
+        st.success("✅ Gemini עובד — מוכן לטעון שיעורים")
+    except Exception as e:
+        st.error(f"❌ שגיאה: {e}")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
