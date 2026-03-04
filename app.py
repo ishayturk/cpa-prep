@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA44
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA45
 
 import streamlit as st
 import smtplib
@@ -319,12 +319,12 @@ elif st.session_state.page in ("study", "lesson"):
 
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-            <div class="logo-wrap" style="margin:0;">{logo_tag}</div>
+        <div id="top" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
             <div style="display:flex; align-items:center; gap:6px;">
                 <span style="font-size:0.9rem; font-weight:600;">{user_name}</span>
                 <span style="font-size:1.2rem;">👤</span>
             </div>
+            <div class="logo-wrap" style="margin:0;">{logo_tag}</div>
         </div>
     """, unsafe_allow_html=True)
     st.markdown("### 📚 שיעורי לימוד")
@@ -402,8 +402,7 @@ elif st.session_state.page in ("study", "lesson"):
             with c2:
                 st.button("📋 שאלון נושא כללי", disabled=True)
             with c3:
-                if st.button("⬆️ לראש העמוד"):
-                    st.rerun()
+                st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;">⬆️ לראש העמוד</a>', unsafe_allow_html=True)
             with c4:
                 if st.button("🏠 תפריט ראשי"):
                     st.session_state.page = "welcome"
