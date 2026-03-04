@@ -1,4 +1,4 @@
-# utils.py | Version: v1.2
+# utils.py | Version: v1.3
 
 import streamlit as st
 import smtplib
@@ -130,8 +130,18 @@ def inject_css():
 # -------------------------
 def clean_lesson(txt):
     lines = txt.split("\n")
+    # הסר שורות ריקות וכותרות markdown בהתחלה
     while lines and (lines[0].strip() == "" or lines[0].strip().startswith("#")):
         lines.pop(0)
+    # הסר שורה ראשונה אם היא נראית ככותרת (bold קצרה ללא סימני פיסוק בסוף)
+    if lines:
+        first = lines[0].strip()
+        is_bold_title = first.startswith("**") and first.endswith("**") and len(first) < 120
+        is_short_title = len(first) < 80 and not first.endswith((".", ",", ":", ";", "?", "!")) and first.count(" ") < 10
+        if is_bold_title or (is_short_title and not first.startswith("-") and not first.startswith("*")):
+            lines.pop(0)
+            while lines and lines[0].strip() == "":
+                lines.pop(0)
     return "\n".join(lines)
 
 def send_otp_email(to_email: str, code: str) -> bool:
