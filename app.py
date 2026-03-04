@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA36
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA37
 
 import streamlit as st
 import smtplib
@@ -402,19 +402,14 @@ elif st.session_state.page == "lesson":
         st.divider()
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            if st.button("📝 שאלון תת נושא"):
-                st.session_state.page = "quiz_sub"
-                st.rerun()
+            st.button("📝 שאלון תת נושא", disabled=True)
         with c2:
-            if st.button("📋 שאלון נושא כללי"):
-                st.session_state.page = "quiz_topic"
-                st.rerun()
+            st.button("📋 שאלון נושא כללי", disabled=True)
         with c3:
             if st.button("⬆️ ראש העמוד"):
                 st.rerun()
         with c4:
             if st.button("🏠 תפריט ראשי"):
-                st.session_state.lesson_txt = ""
                 st.session_state.page = "welcome"
                 st.rerun()
 
