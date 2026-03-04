@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA63
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA64
 
 import streamlit as st
 import smtplib
@@ -405,6 +405,8 @@ elif st.session_state.page in ("study", "lesson"):
                 full_text = clean_lesson(full_text)
                 placeholder.markdown(full_text)
                 st.session_state.lesson_txt = full_text
+                st.session_state.is_loading = False
+                st.rerun()
 
             except Exception as e:
                 st.session_state.is_loading = False
