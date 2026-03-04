@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA48
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA50
 
 import streamlit as st
 import smtplib
@@ -375,7 +375,9 @@ elif st.session_state.page in ("study", "lesson"):
 - ציין מקורות: חוק, תקן, סעיף, או עקרון IFRS הרלוונטי לכל נושא
 - רמה: סטודנט שעומד לגשת למבחן הלשכה ומצפה לחומר ברמה המקצועית הגבוהה ביותר
 - כתוב בעברית, מובנה עם כותרות וסעיפים ברורים
-- אסור להשתמש בכותרת H1 (שורה המתחילה ב-#) — השתמש רק ב-## ומטה"""
+- אסור להוסיף כותרת כלשהי בתחילת התשובה — התחל ישירות מהתוכן הראשון
+- אסור להוסיף משפט פתיחה, הקדמה, או "שיעור מקיף ב..." — קפוץ ישר לחומר
+- השתמש רק ב-## ומטה לכותרות פנימיות, לעולם לא #"""
 
                 placeholder = st.empty()
                 full_text = ""
@@ -384,6 +386,11 @@ elif st.session_state.page in ("study", "lesson"):
                     if chunk.text:
                         full_text += chunk.text
                         placeholder.markdown(full_text + "▌")
+                # הסר שורה ראשונה אם היא כותרת
+                lines = full_text.split("\n")
+                while lines and lines[0].strip().startswith("#"):
+                    lines.pop(0)
+                full_text = "\n".join(lines).lstrip("\n")
                 placeholder.markdown(full_text)
                 st.session_state.lesson_txt = full_text
 
