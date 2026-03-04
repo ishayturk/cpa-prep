@@ -1,4 +1,4 @@
-# utils.py | Version: v1.1
+# utils.py | Version: v1.2
 
 import streamlit as st
 import smtplib
@@ -162,3 +162,5 @@ def reset_login_flow(full: bool = True):
     for k in keys:
         if k in st.session_state:
             del st.session_state[k]
+
+# סוף קובץ
