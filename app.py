@@ -1,4 +1,4 @@
-# File: app.py | Version: CPA66
+# File: app.py | Version: CPA67
 
 import streamlit as st
 from PIL import Image
@@ -158,3 +158,5 @@ elif st.session_state.page == "quiz_sub":
 
 elif st.session_state.page == "quiz_summary":
     render_quiz_summary(logo_tag)
+
+# סוף קובץ
