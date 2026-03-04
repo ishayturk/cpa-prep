@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA43
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA44
 
 import streamlit as st
 import smtplib
@@ -303,9 +303,7 @@ elif st.session_state.page == "welcome":
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="menu-btn">', unsafe_allow_html=True)
-        if st.button("📝 גש/י לבחינה"):
-            st.session_state.page = "exam"
-            st.rerun()
+        st.button("📝 גש/י לבחינה", disabled=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
@@ -319,17 +317,16 @@ elif st.session_state.page in ("study", "lesson"):
 
     user_name = st.session_state.get("user_name", "משתמש")
 
-    # שם משתמש — מימין למעלה, שורה אחת מתחת לגמרי לראש
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f"""
-        <div style="display:flex; align-items:center; justify-content:flex-end;
-                    gap:8px; margin-bottom:4px; margin-top:4px;">
-            <span style="font-size:0.9rem; font-weight:600;">{user_name}</span>
-            <span style="font-size:1.2rem;">👤</span>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+            <div class="logo-wrap" style="margin:0;">{logo_tag}</div>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:0.9rem; font-weight:600;">{user_name}</span>
+                <span style="font-size:1.2rem;">👤</span>
+            </div>
         </div>
     """, unsafe_allow_html=True)
-
-    st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    st.markdown(f'<div class="logo-wrap">{logo_tag}</div>', unsafe_allow_html=True)
     st.markdown("### 📚 שיעורי לימוד")
 
     # בחירת נושא — dropdown
@@ -406,7 +403,6 @@ elif st.session_state.page in ("study", "lesson"):
                 st.button("📋 שאלון נושא כללי", disabled=True)
             with c3:
                 if st.button("⬆️ לראש העמוד"):
-                    st.session_state.lesson_txt = st.session_state.get("lesson_txt", "")
                     st.rerun()
             with c4:
                 if st.button("🏠 תפריט ראשי"):
