@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA51
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA52
 
 import streamlit as st
 import smtplib
@@ -131,6 +131,11 @@ SYLLABUS = {
 # -------------------------
 # Helpers
 # -------------------------
+def clean_lesson(txt):
+    lines = txt.split("\n")
+    while lines and lines[0].strip().startswith("#"):
+        lines.pop(0)
+    return "\n".join(lines).lstrip("\n")
 def send_otp_email(to_email: str, code: str) -> bool:
     try:
         gmail_user = st.secrets["GMAIL_USER"]
@@ -394,7 +399,7 @@ elif st.session_state.page in ("study", "lesson"):
                 lines = full_text.split("\n")
                 while lines and lines[0].strip().startswith("#"):
                     lines.pop(0)
-                full_text = "\n".join(lines).lstrip("\n")
+                full_text = clean_lesson(full_text)
                 placeholder.markdown(full_text)
                 st.session_state.lesson_txt = full_text
 
@@ -402,7 +407,7 @@ elif st.session_state.page in ("study", "lesson"):
                 st.error(f"שגיאה בטעינת השיעור: {e}")
 
         else:
-            st.markdown(st.session_state.get("lesson_txt", ""))
+            st.markdown(clean_lesson(st.session_state.get("lesson_txt", "")))
 
         # כפתורים אחרי שיעור
         if st.session_state.get("lesson_txt"):
