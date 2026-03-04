@@ -1,4 +1,4 @@
-# study_page.py | Version: v1.8
+# study_page.py | Version: v1.9
 
 import streamlit as st
 import google.generativeai as genai
@@ -187,24 +187,36 @@ def render_study(logo_tag):
             quiz_open = st.session_state.get("show_quiz", False)
             st.divider()
 
-            btn_sub_label   = "📝 שאלון שיעור"
-            btn_topic_label = "📋 שאלון מורחב"
-            btn_top_label   = "⬆️ למעלה"
-            btn_home_label  = "🏠 תפריט ראשי"
-
             # שורה 1 — 2 כפתורים
             col1, col2 = st.columns(2)
             with col1:
-                if st.button(btn_sub_label, key="lesson_quiz_sub", disabled=quiz_open, use_container_width=True):
+                st.markdown('<div class="desktop-only">', unsafe_allow_html=True)
+                if st.button("📝 שאלון תת נושא", key="lesson_quiz_sub_d", disabled=quiz_open, use_container_width=True):
                     lesson_txt = st.session_state.get("lesson_txt", "")
                     _start_quiz(selected_topic, selected_sub, lesson_txt, total=10)
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="mobile-only">', unsafe_allow_html=True)
+                if st.button("📝 שאלון שיעור", key="lesson_quiz_sub_m", disabled=quiz_open, use_container_width=True):
+                    lesson_txt = st.session_state.get("lesson_txt", "")
+                    _start_quiz(selected_topic, selected_sub, lesson_txt, total=10)
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
             with col2:
-                if st.button(btn_topic_label, key="lesson_quiz_topic", disabled=quiz_open, use_container_width=True):
+                st.markdown('<div class="desktop-only">', unsafe_allow_html=True)
+                if st.button("📋 שאלון נושא כללי", key="lesson_quiz_topic_d", disabled=quiz_open, use_container_width=True):
                     lesson_txt = st.session_state.get("lesson_txt", "")
                     all_subs = SYLLABUS.get(selected_topic, [])
                     _start_quiz(selected_topic, selected_sub, lesson_txt, total=15, subs=all_subs)
                     st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('<div class="mobile-only">', unsafe_allow_html=True)
+                if st.button("📋 שאלון מורחב", key="lesson_quiz_topic_m", disabled=quiz_open, use_container_width=True):
+                    lesson_txt = st.session_state.get("lesson_txt", "")
+                    all_subs = SYLLABUS.get(selected_topic, [])
+                    _start_quiz(selected_topic, selected_sub, lesson_txt, total=15, subs=all_subs)
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
 
             # שורה 2 — כפתור למעלה ממורכז + תפריט ראשי
             col3, col4 = st.columns(2)
@@ -286,16 +298,35 @@ def _render_inline_quiz():
 
     qc1, qc2, qc3 = st.columns(3)
     with qc1:
-        if st.button("בדוק", disabled=(not has_answer or checked), key=f"check_{idx}", use_container_width=True):
+        # desktop
+        st.markdown('<div class="desktop-only">', unsafe_allow_html=True)
+        if st.button("בדוק תשובה", disabled=(not has_answer or checked), key=f"check_d_{idx}", use_container_width=True):
             st.session_state.quiz_checked[idx] = True
             st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+        # mobile
+        st.markdown('<div class="mobile-only">', unsafe_allow_html=True)
+        if st.button("בדוק", disabled=(not has_answer or checked), key=f"check_m_{idx}", use_container_width=True):
+            st.session_state.quiz_checked[idx] = True
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     with qc2:
+        st.markdown('<div class="desktop-only">', unsafe_allow_html=True)
         if is_last:
-            st.button("הבאה", disabled=True, key=f"next_{idx}", use_container_width=True)
+            st.button("לשאלה הבאה", disabled=True, key=f"next_d_{idx}", use_container_width=True)
         else:
-            if st.button("הבאה", disabled=(not checked or not next_ready), key=f"next_{idx}", use_container_width=True):
+            if st.button("לשאלה הבאה", disabled=(not checked or not next_ready), key=f"next_d_{idx}", use_container_width=True):
                 st.session_state.quiz_idx += 1
                 st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="mobile-only">', unsafe_allow_html=True)
+        if is_last:
+            st.button("הבאה", disabled=True, key=f"next_m_{idx}", use_container_width=True)
+        else:
+            if st.button("הבאה", disabled=(not checked or not next_ready), key=f"next_m_{idx}", use_container_width=True):
+                st.session_state.quiz_idx += 1
+                st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     with qc3:
         if st.button("סיכום", disabled=not (is_last and checked), key=f"summary_{idx}", use_container_width=True):
             st.session_state.quiz_show_summary = True
