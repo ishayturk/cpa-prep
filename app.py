@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA37
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA38
 
 import streamlit as st
 import smtplib
@@ -369,6 +369,7 @@ elif st.session_state.page == "lesson":
     sub = st.session_state.get("selected_sub", "")
     st.markdown(f"### 📖 {sub}")
     st.markdown(f"*נושא: {topic}*")
+    st.markdown('<div id="top"></div>', unsafe_allow_html=True)
     st.divider()
 
     # טעינת שיעור — סטרימינג
@@ -376,10 +377,18 @@ elif st.session_state.page == "lesson":
         try:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
             model = genai.GenerativeModel("gemini-2.0-flash")
-            prompt = f"""אתה מרצה מומחה לחשבונאות ורואי חשבון.
-כתוב שיעור הכנה מקיף ומעמיק למבחן מועצת רואי החשבון בנושא: {sub} (חלק מנושא {topic}).
-השיעור צריך לכסות את כל מה שסטודנט צריך לדעת לבחינה.
-כתוב בעברית, בצורה ברורה ומובנית עם כותרות, דוגמאות ומקורות."""
+            prompt = f"""אתה פרופסור בכיר למשפט עסקי וחשבונאות, המתמחה בהכנה למבחני מועצת רואי החשבון בישראל.
+
+כתוב שיעור מקיף ומעמיק ברמה אקדמית גבוהה בנושא: **{sub}** (חלק מנושא: {topic}).
+
+דרישות מחייבות:
+- החומר חייב לכסות את כל מה שנדרש לבחינת הלשכה ברמה המלאה
+- כלול הגדרות משפטיות/חשבונאיות מדויקות
+- כלול עקרונות, כללים וחריגים
+- כלול דוגמאות מספריות מפורטות — כל נוסחה, חישוב או תרגיל יוצג בתיבת קוד נפרדת
+- ציין מקורות: חוק, תקן, סעיף, או עקרון IFRS הרלוונטי לכל נושא
+- רמה: סטודנט שעומד לגשת למבחן הלשכה ומצפה לחומר ברמה המקצועית הגבוהה ביותר
+- כתוב בעברית, מובנה עם כותרות וסעיפים ברורים"""
 
             placeholder = st.empty()
             full_text = ""
@@ -406,8 +415,7 @@ elif st.session_state.page == "lesson":
         with c2:
             st.button("📋 שאלון נושא כללי", disabled=True)
         with c3:
-            if st.button("⬆️ ראש העמוד"):
-                st.rerun()
+            st.markdown('<a href="#top" style="display:block; width:100%; text-align:center; background:#f0f2f6; border-radius:10px; padding:10px 0; font-weight:800; text-decoration:none; color:#31333f;">⬆️ ראש העמוד</a>', unsafe_allow_html=True)
         with c4:
             if st.button("🏠 תפריט ראשי"):
                 st.session_state.page = "welcome"
