@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA28
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA31
 
 import streamlit as st
 import smtplib
@@ -361,7 +361,7 @@ elif st.session_state.page == "lesson":
 
     try:
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-2.0-flash-001")
         model.generate_content("ping")
         st.success("✅ Gemini עובד — מוכן לטעון שיעורים")
     except Exception as e:
