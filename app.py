@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA39
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA42
 
 import streamlit as st
 import smtplib
@@ -367,7 +367,8 @@ elif st.session_state.page == "lesson":
 
     topic = st.session_state.get("selected_topic", "")
     sub = st.session_state.get("selected_sub", "")
-    st.markdown(f'<div id="top"></div><h3>📖 {sub}</h3>', unsafe_allow_html=True)
+    st.markdown('<div id="top" style="margin-top:-60px; padding-top:60px;"></div>', unsafe_allow_html=True)
+    st.markdown(f"### 📖 {sub}")
     st.markdown(f"*נושא: {topic}*")
     st.divider()
 
@@ -384,7 +385,7 @@ elif st.session_state.page == "lesson":
 - החומר חייב לכסות את כל מה שנדרש לבחינת הלשכה ברמה המלאה
 - כלול הגדרות משפטיות/חשבונאיות מדויקות
 - כלול עקרונות, כללים וחריגים
-- כלול דוגמאות מספריות מפורטות — כל נוסחה, חישוב או תרגיל יוצג בתיבת קוד נפרדת
+- כל נוסחה, חישוב, תרגיל מספרי, או ביטוי מתמטי — חייב להופיע בתוך תיבת קוד (``` ```) בלבד. אסור לרשום נוסחאות בשורת טקסט רגילה
 - ציין מקורות: חוק, תקן, סעיף, או עקרון IFRS הרלוונטי לכל נושא
 - רמה: סטודנט שעומד לגשת למבחן הלשכה ומצפה לחומר ברמה המקצועית הגבוהה ביותר
 - כתוב בעברית, מובנה עם כותרות וסעיפים ברורים"""
@@ -414,7 +415,11 @@ elif st.session_state.page == "lesson":
         with c2:
             st.button("📋 שאלון נושא כללי", disabled=True)
         with c3:
-            st.markdown('<a href="#top" style="display:block; width:100%; text-align:center; padding:10px 0; font-weight:800; text-decoration:none; color:#31333f;">⬆️ לראש העמוד</a>', unsafe_allow_html=True)
+            st.markdown("""
+            <a href="javascript:window.parent.document.querySelector('section.main').scrollTo(0,0);"
+               style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;">
+               ⬆️ לראש העמוד
+            </a>""", unsafe_allow_html=True)
         with c4:
             if st.button("🏠 תפריט ראשי"):
                 st.session_state.page = "welcome"
