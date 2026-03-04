@@ -1,9 +1,8 @@
-\# utils.py | Version: v1.5
+# utils.py | Version: v1.5
 
 import streamlit as st
-import smtplib
+import resend
 import base64
-from email.mime.text import MIMEText
 
 # -------------------------
 # Syllabus
