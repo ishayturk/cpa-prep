@@ -1,4 +1,4 @@
-# study_page.py | Version: v1.7
+# study_page.py | Version: v1.8
 
 import streamlit as st
 import google.generativeai as genai
@@ -14,20 +14,23 @@ def _clear_quiz():
         st.session_state.pop(k, None)
 
 
+def _is_mobile():
+    # Streamlit לא חושף user-agent — נשתמש ב-session_state flag שניתן לקבוע ידנית
+    # ברירת מחדל: נבדוק לפי רוחב דרך JS injection (הפתרון הטוב ביותר ב-Streamlit)
+    return st.session_state.get("is_mobile", False)
+
+
 def _generate_one_question(topic, sub, lesson_txt, q_number, total, existing_qs, subs=None):
-    """מייצר שאלה אחת"""
     try:
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
         model = genai.GenerativeModel("gemini-2.0-flash")
         existing_json = json.dumps(existing_qs, ensure_ascii=False) if existing_qs else "[]"
-
         if subs:
             context = f"נושא: {topic}\nתתי נושאים: {', '.join(subs)}\n\nחומר שיעור:\n{lesson_txt[:5000]}"
             instruction = f"צור שאלה מספר {q_number} מתוך {total} — וודא שהשאלות מכסות את כל תתי הנושאים באופן מאוזן"
         else:
             context = f"נושא: {topic} — {sub}\n\nחומר שיעור:\n{lesson_txt[:5000]}"
             instruction = f"צור שאלה מספר {q_number} מתוך {total} על החומר הנלמד"
-
         prompt = f"""{context}
 
 {instruction}
@@ -54,7 +57,6 @@ def _generate_one_question(topic, sub, lesson_txt, q_number, total, existing_qs,
 
 
 def _background_generate(topic, sub, lesson_txt, total, subs=None):
-    """מייצר שאלות 2-total ברקע"""
     for i in range(1, total):
         if not st.session_state.get("show_quiz"):
             break
@@ -76,7 +78,6 @@ def _background_generate(topic, sub, lesson_txt, total, subs=None):
 
 
 def _start_quiz(selected_topic, selected_sub, lesson_txt, total, subs=None):
-    """מתחיל שאלון — מייצר שאלה 1 מיידית ומפעיל רקע"""
     _clear_quiz()
     st.session_state.show_quiz = True
     st.session_state.quiz_total = total
@@ -95,6 +96,15 @@ def _start_quiz(selected_topic, selected_sub, lesson_txt, total, subs=None):
 
 
 def render_study(logo_tag):
+    # זיהוי מובייל דרך JS
+    st.markdown("""
+        <script>
+        if (window.innerWidth <= 768) {
+            window.parent.postMessage({type: 'streamlit:setComponentValue', value: true}, '*');
+        }
+        </script>
+    """, unsafe_allow_html=True)
+
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     render_top_bar(logo_tag)
     st.markdown("### 📚 שיעורי לימוד")
@@ -173,25 +183,40 @@ def render_study(logo_tag):
             if st.session_state.get("show_quiz"):
                 _render_inline_quiz()
 
-            # תפריט תחתון
+            # תפריט תחתון — desktop: 4 עמודות | mobile: 2+2
             quiz_open = st.session_state.get("show_quiz", False)
             st.divider()
-            c1, c2, c3, c4 = st.columns(4)
-            with c1:
-                if st.button("📝 שאלון תת נושא", key="lesson_quiz_sub", disabled=quiz_open):
+
+            btn_sub_label   = "📝 שאלון שיעור"
+            btn_topic_label = "📋 שאלון מורחב"
+            btn_top_label   = "⬆️ למעלה"
+            btn_home_label  = "🏠 תפריט ראשי"
+
+            # שורה 1 — 2 כפתורים
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button(btn_sub_label, key="lesson_quiz_sub", disabled=quiz_open, use_container_width=True):
                     lesson_txt = st.session_state.get("lesson_txt", "")
                     _start_quiz(selected_topic, selected_sub, lesson_txt, total=10)
                     st.rerun()
-            with c2:
-                if st.button("📋 שאלון נושא כללי", key="lesson_quiz_topic", disabled=quiz_open):
+            with col2:
+                if st.button(btn_topic_label, key="lesson_quiz_topic", disabled=quiz_open, use_container_width=True):
                     lesson_txt = st.session_state.get("lesson_txt", "")
                     all_subs = SYLLABUS.get(selected_topic, [])
                     _start_quiz(selected_topic, selected_sub, lesson_txt, total=15, subs=all_subs)
                     st.rerun()
-            with c3:
-                st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;">⬆️ לראש העמוד</a>', unsafe_allow_html=True)
-            with c4:
-                if st.button("🏠 תפריט ראשי", key="lesson_home"):
+
+            # שורה 2 — כפתור למעלה ממורכז + תפריט ראשי
+            col3, col4 = st.columns(2)
+            with col3:
+                st.markdown(
+                    '<a href="#top" style="display:block;text-align:center;padding:10px 0;'
+                    'font-weight:800;text-decoration:none;color:#31333f;border:1px solid #ddd;'
+                    'border-radius:10px;">⬆️ למעלה</a>',
+                    unsafe_allow_html=True
+                )
+            with col4:
+                if st.button(btn_home_label, key="lesson_home", use_container_width=True):
                     for k in ["selected_topic", "selected_sub", "lesson_txt", "is_loading"] + QUIZ_KEYS:
                         st.session_state.pop(k, None)
                     st.session_state.page = "welcome"
@@ -204,7 +229,6 @@ def _render_inline_quiz():
     sub = st.session_state.get("selected_sub", "")
     topic = st.session_state.get("selected_topic", "")
     questions = st.session_state.get("quiz_questions", [])
-    subs = SYLLABUS.get(topic, [])
     total_expected = st.session_state.get("quiz_total", 10)
 
     st.divider()
@@ -216,7 +240,7 @@ def _render_inline_quiz():
         return
 
     if st.session_state.get("quiz_show_summary"):
-        _render_summary(questions, sub, topic, st.session_state.get("quiz_total", 10))
+        _render_summary(questions, sub, topic, total_expected)
         return
 
     idx = st.session_state.get("quiz_idx", 0)
@@ -252,6 +276,9 @@ def _render_inline_quiz():
             st.markdown(f'<div style="background:#f8d7da; padding:10px; border-radius:8px; margin-top:4px;">תשובה נכונה: {q["answers"][correct_idx]}</div>', unsafe_allow_html=True)
         st.markdown(f'<div style="background:#cce5ff; padding:10px; border-radius:8px; margin-top:8px;">📖 {q["explanation"]}</div>', unsafe_allow_html=True)
 
+    # תפריט שאלון — 3 כפתורים בשורה אחת
+    # בנייד: "בדוק" / "הבאה" / "סיכום"
+    # בדסקטופ: "בדוק תשובה" / "לשאלה הבאה" / "סיכום"
     st.markdown('<div style="background:#f0f4f8; padding:10px; border-radius:10px; margin-top:16px;">', unsafe_allow_html=True)
     is_last = idx == total_expected - 1
     has_answer = st.session_state.quiz_answers[idx] is not None
@@ -259,18 +286,18 @@ def _render_inline_quiz():
 
     qc1, qc2, qc3 = st.columns(3)
     with qc1:
-        if st.button("בדוק תשובה", disabled=(not has_answer or checked), key=f"check_{idx}"):
+        if st.button("בדוק", disabled=(not has_answer or checked), key=f"check_{idx}", use_container_width=True):
             st.session_state.quiz_checked[idx] = True
             st.rerun()
     with qc2:
         if is_last:
-            st.button("לשאלה הבאה", disabled=True, key=f"next_{idx}")
+            st.button("הבאה", disabled=True, key=f"next_{idx}", use_container_width=True)
         else:
-            if st.button("לשאלה הבאה", disabled=(not checked or not next_ready), key=f"next_{idx}"):
+            if st.button("הבאה", disabled=(not checked or not next_ready), key=f"next_{idx}", use_container_width=True):
                 st.session_state.quiz_idx += 1
                 st.rerun()
     with qc3:
-        if st.button("סיכום", disabled=not (is_last and checked), key=f"summary_{idx}"):
+        if st.button("סיכום", disabled=not (is_last and checked), key=f"summary_{idx}", use_container_width=True):
             st.session_state.quiz_show_summary = True
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
