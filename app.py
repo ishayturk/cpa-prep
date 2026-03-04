@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA45
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA46
 
 import streamlit as st
 import smtplib
@@ -320,7 +320,7 @@ elif st.session_state.page in ("study", "lesson"):
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     st.markdown(f"""
         <div id="top" style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-            <div style="display:flex; align-items:center; gap:6px;">
+            <div style="display:flex; align-items:center; gap:6px; margin-right:16px;">
                 <span style="font-size:0.9rem; font-weight:600;">{user_name}</span>
                 <span style="font-size:1.2rem;">👤</span>
             </div>
@@ -358,7 +358,6 @@ elif st.session_state.page in ("study", "lesson"):
     selected_sub = st.session_state.get("selected_sub")
     if selected_sub:
         st.markdown(f"#### 📖 {selected_sub}")
-        st.divider()
 
         if not st.session_state.get("lesson_txt"):
             try:
@@ -375,7 +374,8 @@ elif st.session_state.page in ("study", "lesson"):
 - כל נוסחה, חישוב, תרגיל מספרי, או ביטוי מתמטי — חייב להופיע בתוך תיבת קוד (``` ```) בלבד. אסור לרשום נוסחאות בשורת טקסט רגילה
 - ציין מקורות: חוק, תקן, סעיף, או עקרון IFRS הרלוונטי לכל נושא
 - רמה: סטודנט שעומד לגשת למבחן הלשכה ומצפה לחומר ברמה המקצועית הגבוהה ביותר
-- כתוב בעברית, מובנה עם כותרות וסעיפים ברורים"""
+- כתוב בעברית, מובנה עם כותרות וסעיפים ברורים
+- אסור להשתמש בכותרת H1 (שורה המתחילה ב-#) — השתמש רק ב-## ומטה"""
 
                 placeholder = st.empty()
                 full_text = ""
