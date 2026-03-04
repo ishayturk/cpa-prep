@@ -1,4 +1,4 @@
-# study_page.py | Version: v3.1
+# study_page.py | Version: v3.3
 
 import streamlit as st
 import google.generativeai as genai
@@ -150,31 +150,26 @@ def render_study(logo_tag):
             st.markdown("""
             <style>
             .quiz-btn button { background-color: #e0f2fe !important; }
-            div[data-testid="stHorizontalBlock"] { flex-wrap: nowrap !important; }
-            @media (max-width: 768px) {
-                div[data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; }
-                div[data-testid="stHorizontalBlock"] > div[data-testid="column"] { flex: 1 1 100% !important; }
-            }
             </style>
             """, unsafe_allow_html=True)
 
             c1, c2, c3, c4 = st.columns(4)
             with c1:
                 st.markdown('<div class="quiz-btn">', unsafe_allow_html=True)
-                if st.button("📝 לשאלון תת נושא", key="lesson_quiz_sub", disabled=quiz_open):
+                if st.button("לשאלון תת נושא", key="lesson_quiz_sub", disabled=quiz_open):
                     _start_quiz(selected_topic, selected_sub, st.session_state.get("lesson_txt", ""), total=10)
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with c2:
                 st.markdown('<div class="quiz-btn">', unsafe_allow_html=True)
-                if st.button("📋 לשאלון נושא מורחב", key="lesson_quiz_topic", disabled=quiz_open):
+                if st.button("לשאלון נושא מורחב", key="lesson_quiz_topic", disabled=quiz_open):
                     _start_quiz(selected_topic, selected_sub, st.session_state.get("lesson_txt", ""), total=15, subs=SYLLABUS.get(selected_topic, []))
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with c3:
-                st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;border:1px solid #ddd;border-radius:8px;">⬆️ למעלה</a>', unsafe_allow_html=True)
+                st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;border:1px solid #ddd;border-radius:8px;">לראש העמוד</a>', unsafe_allow_html=True)
             with c4:
-                if st.button("🏠 לעמוד הראשי", key="lesson_home"):
+                if st.button("לעמוד הראשי", key="lesson_home"):
                     for k in ["selected_topic", "selected_sub", "lesson_txt", "is_loading"] + QUIZ_KEYS:
                         st.session_state.pop(k, None)
                     st.session_state.page = "welcome"
