@@ -1,4 +1,4 @@
-# study_page.py | Version: v3.3
+# study_page.py | Version: v3.5
 
 import streamlit as st
 import google.generativeai as genai
@@ -167,7 +167,7 @@ def render_study(logo_tag):
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with c3:
-                st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;border:1px solid #ddd;border-radius:8px;">לראש העמוד</a>', unsafe_allow_html=True)
+                st.markdown('<a href="#top" style="display:block;text-align:center;padding:10px 0;font-weight:800;text-decoration:none;color:#31333f;">לראש העמוד</a>', unsafe_allow_html=True)
             with c4:
                 if st.button("לעמוד הראשי", key="lesson_home"):
                     for k in ["selected_topic", "selected_sub", "lesson_txt", "is_loading"] + QUIZ_KEYS:
