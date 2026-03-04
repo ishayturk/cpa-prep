@@ -1,4 +1,4 @@
-# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA53
+# File: app.py | Date & Time: 2026-03-03 23:33 (Asia/Jerusalem) | Version: CPA54
 
 import streamlit as st
 import smtplib
@@ -362,8 +362,6 @@ elif st.session_state.page in ("study", "lesson"):
     # שיעור
     selected_sub = st.session_state.get("selected_sub")
     if selected_sub:
-        st.markdown(f"#### 📖 {selected_sub}")
-
         if not st.session_state.get("lesson_txt"):
             try:
                 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
