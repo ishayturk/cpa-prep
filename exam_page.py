@@ -91,6 +91,5 @@ def render_exam_instructions(logo_tag):
             st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
-    st.stop()
 
 # סוף קובץ
