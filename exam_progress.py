@@ -1,20 +1,37 @@
-# exam_progress.py | Version: v2.4
+# exam_progress.py | Version: v3.0
 
 import streamlit as st
 import time
-import streamlit.components.v1 as components
 from utils import render_top_bar
 
 EXAM_QUESTIONS = 5
 EXAM_SECONDS = 1 * 60  # דקה לניסיון
 
 
+@st.fragment(run_every=1)
+def _render_timer(subject, remaining_at_start, start_time):
+    elapsed = time.time() - start_time
+    remaining = max(0, EXAM_SECONDS - int(elapsed))
+    mins = remaining // 60
+    secs = remaining % 60
+    color = "#dc3545" if remaining <= 60 else "#222"
+    st.markdown(f"""
+    <div style="text-align:center; margin-bottom:12px;">
+        <span style="font-size:1.4rem; font-weight:700; color:#222;">בחינה: {subject}</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <span style="font-size:2.6rem; font-weight:800; letter-spacing:3px; color:{color};">{mins:02d}:{secs:02d}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if remaining == 0 and not st.session_state.get("exam_frozen"):
+        st.session_state.exam_frozen = True
+        st.rerun()
+
+
 def render_exam_progress(logo_tag):
     st.markdown("""
     <style>
     .exam-wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; }
-    .exam-cols { display: flex; gap: 16px; margin-top: 12px; }
-    @media (max-width: 768px) { .exam-cols { flex-direction: column; } }
     </style>
     """, unsafe_allow_html=True)
 
@@ -33,61 +50,20 @@ def render_exam_progress(logo_tag):
         st.session_state.exam_frozen = False
         st.session_state.exam_finished = False
 
-    # זמן שנותר (לצורך JavaScript)
     elapsed = time.time() - st.session_state.exam_start_time
     remaining = max(0, EXAM_SECONDS - int(elapsed))
-
-    # זיהוי timeout — מה-URL או מהשרת
-    if (st.query_params.get("timeout") == "1" or remaining == 0) and not st.session_state.exam_frozen:
-        st.session_state.exam_frozen = True
-        st.rerun()
 
     frozen = st.session_state.exam_frozen
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # טיימר JavaScript — לא מרעיד את המסך
-    timer_html = f"""
-    <style>
-        .exam-header {{ text-align: center; margin-bottom: 12px; font-family: inherit; }}
-        .exam-title {{ font-size: 1.4rem; font-weight: 700; color: #222; }}
-        #exam-clock {{ font-size: 2.6rem; font-weight: 800; letter-spacing: 3px; color: #222; margin-right: 1.5rem; display: inline; }}
-        @media (max-width: 768px) {{
-            .exam-title {{ font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
-            #exam-clock {{ font-size: 2rem; }}
-        }}
-    </style>
-    <div class="exam-header">
-        <span class="exam-title">בחינה: {subject}</span>
-        <span id="exam-clock">00:00</span>
-    </div>
-    <script>
-    var deadline = Date.now() + {remaining} * 1000;
-    function updateClock() {{
-        var s = Math.round((deadline - Date.now()) / 1000);
-        if (s < 0) s = 0;
-        var m = Math.floor(s / 60); var sec = s % 60;
-        var el = document.getElementById('exam-clock');
-        if (el) {{
-            el.innerHTML = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
-            el.style.color = (s <= 60) ? '#dc3545' : '#222';
-        }}
-        if (s <= 0) {{
-            window.parent.location.href = window.parent.location.pathname + '?timeout=1';
-            return;
-        }}
-        setTimeout(updateClock, 1000);
-    }}
-    updateClock();
-    </script>
-    """
-    components.html(timer_html, height=80)
+    # טיימר — מתרענן כל שנייה בלי לרענן את שאר הדף
+    _render_timer(subject, remaining, st.session_state.exam_start_time)
 
-    # פופאפ זמן נגמר
+    # הודעת תום זמן
     if frozen and not finished:
         st.error("⏰ זמן הבחינה הסתיים — לחץ/י על **סיים בחינה** להגשה")
 
-    # שני עמודות
     col_q, col_map = st.columns([2, 1])
 
     with col_q:
@@ -130,7 +106,6 @@ def render_exam_progress(logo_tag):
                 for k in ["exam_start_time", "exam_answers", "exam_visited",
                           "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
                     st.session_state.pop(k, None)
-                st.query_params.clear()
                 st.session_state.page = "welcome"
                 st.rerun()
 
