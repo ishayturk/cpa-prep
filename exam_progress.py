@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v3.2
+# exam_progress.py | Version: v3.3
 
 import streamlit as st
 import time
@@ -16,10 +16,8 @@ def render_exam_progress(logo_tag):
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<div class="exam-wrap">', unsafe_allow_html=True)
-    render_top_bar(logo_tag)
-
     subject = st.session_state.get("exam_subject", "")
+    user_name = st.session_state.get("user_name", "")
 
     # אתחול state
     if "exam_start_time" not in st.session_state:
@@ -42,21 +40,43 @@ def render_exam_progress(logo_tag):
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # טיימר JavaScript — ויזואלי בלבד, ללא שינוי URL
+    # כותרת קבועה + טיימר JavaScript
     timer_html = f"""
     <style>
-        body {{ margin:0; padding:0; overflow:hidden; }}
-        .exam-header {{ text-align:center; font-family:inherit; }}
-        .exam-title {{ font-size:1.4rem; font-weight:700; color:#222; }}
-        #exam-clock {{ font-size:2.6rem; font-weight:800; letter-spacing:3px; color:#222; margin-right:1.5rem; display:inline; }}
+        body {{ margin:0; padding:0; overflow:hidden; direction:rtl; }}
+
+        /* קבוע במחשב — כל הבר */
+        .exam-sticky {{
+            position:fixed; top:0; left:0; right:0; z-index:9999;
+            background:#fff; border-bottom:1px solid #eee;
+            padding:8px 24px 4px 24px;
+        }}
+        .exam-topbar {{
+            display:flex; align-items:center; justify-content:space-between;
+        }}
+        .exam-username {{ font-size:0.9rem; font-weight:600; color:#444; }}
+        .exam-subject {{ font-size:1.3rem; font-weight:700; color:#222; text-align:center; flex:1; }}
+        .exam-logo {{ font-size:1.2rem; }}
+        .exam-clock-wrap {{ text-align:center; margin-top:2px; }}
+        #exam-clock {{ font-size:1.5rem; font-weight:800; letter-spacing:3px; color:#222; }}
+
+        /* קבוע בנייד — רק שעון */
         @media (max-width:768px) {{
-            .exam-title {{ font-size:0.95rem; }}
-            #exam-clock {{ font-size:2rem; }}
+            .exam-sticky {{ padding:4px 12px; }}
+            .exam-topbar {{ display:none; }}
+            .exam-clock-wrap {{ margin-top:0; }}
+            #exam-clock {{ font-size:1.3rem; }}
         }}
     </style>
-    <div class="exam-header">
-        <span class="exam-title">בחינה: {subject}</span>
-        <span id="exam-clock">--:--</span>
+    <div class="exam-sticky">
+        <div class="exam-topbar">
+            <div class="exam-username">👤 {user_name}</div>
+            <div class="exam-subject">בחינה: {subject}</div>
+            <div class="exam-logo">{logo_tag}</div>
+        </div>
+        <div class="exam-clock-wrap">
+            <span id="exam-clock">--:--</span>
+        </div>
     </div>
     <script>
     var deadline = Date.now() + {remaining} * 1000;
@@ -74,7 +94,7 @@ def render_exam_progress(logo_tag):
     updateClock();
     </script>
     """
-    components.html(timer_html, height=70)
+    components.html(timer_html, height=90)
 
     # הודעת תום זמן
     if frozen and not finished:
@@ -133,8 +153,8 @@ def render_exam_progress(logo_tag):
     with col_map:
         st.markdown("**מפת שאלות**")
         visited = st.session_state.exam_visited
-        for row in range(0, EXAM_QUESTIONS, 4):
-            cols = st.columns(4)
+        for row in range(0, EXAM_QUESTIONS, 5):
+            cols = st.columns(5)
             for i, col in enumerate(cols):
                 q_idx = row + i
                 if q_idx < EXAM_QUESTIONS:
