@@ -1,32 +1,20 @@
-# exam_progress.py | Version: v1.1
+# exam_progress.py | Version: v2.0
 
 import streamlit as st
 import time
+import streamlit.components.v1 as components
 from utils import render_top_bar
 
 EXAM_QUESTIONS = 40
-EXAM_SECONDS = 2 * 60  # 2 דקות לניסיון (במקום 120 דקות)
+EXAM_SECONDS = 2 * 60  # 2 דקות לניסיון (במקום 7200)
 
 
 def render_exam_progress(logo_tag):
-    # CSS לעמוד הבחינה — רחב יותר במחשב
     st.markdown("""
     <style>
     .exam-wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; }
-    .exam-header { text-align: center; margin-bottom: 16px; }
-    .exam-title { font-size: 1.4rem; font-weight: 700; color: #222; }
-    .exam-timer { font-size: 2.6rem; font-weight: 800; letter-spacing: 3px; color: #222; }
-    .exam-timer.red { color: #dc3545; }
-    @media (max-width: 768px) {
-        .exam-title { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .exam-timer { font-size: 2rem; }
-    }
     .exam-cols { display: flex; gap: 16px; margin-top: 12px; }
-    .exam-question-frame { flex: 2; border: 1px solid #ddd; border-radius: 10px; padding: 20px; background: #fff; }
-    .exam-map-frame { flex: 1; border: 1px solid #ddd; border-radius: 10px; padding: 16px; background: #f9f9f9; }
-    @media (max-width: 768px) {
-        .exam-cols { flex-direction: column; }
-    }
+    @media (max-width: 768px) { .exam-cols { flex-direction: column; } }
     </style>
     """, unsafe_allow_html=True)
 
@@ -34,9 +22,8 @@ def render_exam_progress(logo_tag):
     render_top_bar(logo_tag)
 
     subject = st.session_state.get("exam_subject", "")
-    user_name = st.session_state.get("user_name", "")
 
-    # אתחול state הבחינה
+    # אתחול state
     if "exam_start_time" not in st.session_state:
         st.session_state.exam_start_time = time.time()
         st.session_state.exam_answers = [None] * EXAM_QUESTIONS
@@ -46,46 +33,67 @@ def render_exam_progress(logo_tag):
         st.session_state.exam_frozen = False
         st.session_state.exam_finished = False
 
-    # חישוב זמן
+    # זמן שנותר (לצורך JavaScript)
     elapsed = time.time() - st.session_state.exam_start_time
     remaining = max(0, EXAM_SECONDS - int(elapsed))
-    mins = remaining // 60
-    secs = remaining % 60
-    timer_str = f"{mins:02d}:{secs:02d}"
-    is_red = remaining <= 60  # דקה אחרונה באדום (בגרסה האמיתית: 10 דקות)
-    timer_class = "exam-timer red" if is_red else "exam-timer"
 
-    # זמן נגמר
-    if remaining == 0 and not st.session_state.exam_frozen:
+    # זיהוי timeout מה-URL
+    if st.query_params.get("timeout") == "1" and not st.session_state.exam_frozen:
         st.session_state.exam_frozen = True
 
     frozen = st.session_state.exam_frozen
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # כותרת + טיימר
-    st.markdown(f"""
+    # טיימר JavaScript — לא מרעיד את המסך
+    timer_html = f"""
+    <style>
+        .exam-header {{ text-align: center; margin-bottom: 12px; font-family: inherit; }}
+        .exam-title {{ font-size: 1.4rem; font-weight: 700; color: #222; }}
+        #exam-clock {{ font-size: 2.6rem; font-weight: 800; letter-spacing: 3px; color: #222; margin-right: 1.5rem; display: inline; }}
+        @media (max-width: 768px) {{
+            .exam-title {{ font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+            #exam-clock {{ font-size: 2rem; }}
+        }}
+    </style>
     <div class="exam-header">
         <span class="exam-title">בחינה: {subject}</span>
-        &nbsp;&nbsp;&nbsp;&nbsp;
-        <span class="{timer_class}">{timer_str}</span>
+        <span id="exam-clock">00:00</span>
     </div>
-    """, unsafe_allow_html=True)
-
+    <script>
+    var deadline = Date.now() + {remaining} * 1000;
+    function updateClock() {{
+        var s = Math.round((deadline - Date.now()) / 1000);
+        if (s < 0) s = 0;
+        var m = Math.floor(s / 60); var sec = s % 60;
+        var el = document.getElementById('exam-clock');
+        if (el) {{
+            el.innerHTML = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+            el.style.color = (s <= 60) ? '#dc3545' : '#222';
+        }}
+        if (s <= 0) {{
+            parent.location.href = parent.location.pathname + '?timeout=1';
+            return;
+        }}
+        setTimeout(updateClock, 1000);
+    }}
+    updateClock();
+    </script>
+    """
+    components.html(timer_html, height=80)
 
     # פופאפ זמן נגמר
     if frozen and not finished:
         st.error("⏰ זמן הבחינה הסתיים — לחץ/י על **סיים בחינה** להגשה")
 
-    # שני פריימים
+    # שני עמודות
     col_q, col_map = st.columns([2, 1])
 
     with col_q:
         q_num = current + 1
         st.markdown(f"**שאלה {q_num}**")
-        st.markdown(f"_[כאן תופיע השאלה שתיווצר מהמודל עבור נושא: {subject}]_")
+        st.markdown(f"_[כאן תופיע השאלה עבור נושא: {subject}]_")
 
-        # תשובות
         answer = st.radio(
             "בחר תשובה:",
             options=["א. תשובה ראשונה", "ב. תשובה שנייה", "ג. תשובה שלישית", "ד. תשובה רביעית"],
@@ -99,9 +107,7 @@ def render_exam_progress(logo_tag):
             st.session_state.exam_answers[current] = idx
 
         has_answer = st.session_state.exam_answers[current] is not None
-        all_answered = all(a is not None for a in st.session_state.exam_answers)
 
-        # כפתורי ניווט
         nav1, nav2, nav3, nav4 = st.columns(4)
         with nav1:
             if st.button("◀ הקודמת", disabled=(current == 0 or frozen)):
@@ -123,6 +129,7 @@ def render_exam_progress(logo_tag):
                 for k in ["exam_start_time", "exam_answers", "exam_visited",
                           "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
                     st.session_state.pop(k, None)
+                st.query_params.clear()
                 st.session_state.page = "welcome"
                 st.rerun()
 
@@ -136,15 +143,9 @@ def render_exam_progress(logo_tag):
                 if q_idx < EXAM_QUESTIONS:
                     with col:
                         is_active = visited[q_idx]
-                        label = str(q_idx + 1)
-                        if st.button(label, key=f"map_{q_idx}", disabled=not is_active):
+                        if st.button(str(q_idx + 1), key=f"map_{q_idx}", disabled=not is_active):
                             st.session_state.exam_current = q_idx
                             st.rerun()
-
-    # רענון אוטומטי לטיימר (כל שנייה)
-    if not frozen and not finished:
-        time.sleep(1)
-        st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
