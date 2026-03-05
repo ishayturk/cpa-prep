@@ -1,4 +1,4 @@
-# File: app.py | Version: CPA71
+# File: app.py | Version: CPA72
 
 import streamlit as st
 from PIL import Image
@@ -171,6 +171,9 @@ elif st.session_state.page == "exam_instructions":
     st.stop()
 
 elif st.session_state.page == "exam_progress":
+    if st.query_params.get("timeout") == "1" and st.session_state.get("exam_start_time") and not st.session_state.get("exam_frozen"):
+        st.session_state.exam_frozen = True
+        st.rerun()
     render_exam_progress(logo_tag)
 
 elif st.session_state.page == "exam_feedback":
