@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v2.3
+# exam_progress.py | Version: v2.4
 
 import streamlit as st
 import time
@@ -73,7 +73,7 @@ def render_exam_progress(logo_tag):
             el.style.color = (s <= 60) ? '#dc3545' : '#222';
         }}
         if (s <= 0) {{
-            parent.location.href = parent.location.pathname + '?timeout=1';
+            window.parent.location.href = window.parent.location.pathname + '?timeout=1';
             return;
         }}
         setTimeout(updateClock, 1000);
