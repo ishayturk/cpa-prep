@@ -1,9 +1,10 @@
-# File: app.py | Version: CPA67
+# File: app.py | Version: CPA68
 
 import streamlit as st
 from PIL import Image
 from utils import inject_css, get_logo_tag, send_otp_email, clear_login_inputs_only, reset_login_flow, render_top_bar
 from study_page import render_study
+from exam_page import render_exam_topic, render_exam_instructions
 from quiz_page import render_quiz, render_quiz_summary
 import random
 import time
@@ -146,7 +147,9 @@ elif st.session_state.page == "welcome":
         st.markdown('</div>', unsafe_allow_html=True)
     with col2:
         st.markdown('<div class="menu-btn">', unsafe_allow_html=True)
-        st.button("📝 גש/י לבחינה", disabled=True)
+        if st.button("📝 גש/י לבחינה"):
+            st.session_state.page = "exam_topic"
+            st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -158,5 +161,11 @@ elif st.session_state.page == "quiz_sub":
 
 elif st.session_state.page == "quiz_summary":
     render_quiz_summary(logo_tag)
+
+elif st.session_state.page == "exam_topic":
+    render_exam_topic(logo_tag)
+
+elif st.session_state.page == "exam_instructions":
+    render_exam_instructions(logo_tag)
 
 # סוף קובץ
