@@ -1,4 +1,4 @@
-# study_page.py | Version: v3.8
+# study_page.py | Version: v3.9
 
 import streamlit as st
 import google.generativeai as genai
@@ -253,10 +253,11 @@ def _render_inline_quiz():
 
     st.markdown("""
     <style>
-    .quiz-action-btn button { background-color: #e0f2fe !important; }
+    .quiz-action-btn button { background-color: #e0f2fe !important; width: auto !important; }
     @media (max-width: 768px) {
-        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) { flex-wrap: wrap !important; }
-        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) > div[data-testid="column"] { flex: 1 1 100% !important; }
+        .quiz-action-btn button { width: auto !important; display: inline-block !important; }
+        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) { flex-wrap: wrap !important; justify-content: center !important; }
+        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) > div[data-testid="column"] { flex: 0 0 auto !important; width: auto !important; }
     }
     </style>
     """, unsafe_allow_html=True)
