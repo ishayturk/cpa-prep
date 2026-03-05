@@ -1,12 +1,12 @@
-# exam_progress.py | Version: v2.0
+# exam_progress.py | Version: v2.1
 
 import streamlit as st
 import time
 import streamlit.components.v1 as components
 from utils import render_top_bar
 
-EXAM_QUESTIONS = 40
-EXAM_SECONDS = 2 * 60  # 2 דקות לניסיון (במקום 7200)
+EXAM_QUESTIONS = 5
+EXAM_SECONDS = 1 * 60  # דקה לניסיון
 
 
 def render_exam_progress(logo_tag):
