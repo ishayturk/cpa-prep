@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v1.0
+# exam_progress.py | Version: v1.1
 
 import streamlit as st
 import time
@@ -13,10 +13,14 @@ def render_exam_progress(logo_tag):
     st.markdown("""
     <style>
     .exam-wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; }
-    .exam-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .exam-title { font-size: 1rem; font-weight: 600; color: #444; }
-    .exam-timer { font-size: 1.6rem; font-weight: 800; letter-spacing: 2px; color: #222; }
+    .exam-header { text-align: center; margin-bottom: 16px; }
+    .exam-title { font-size: 1.4rem; font-weight: 700; color: #222; margin-bottom: 4px; }
+    .exam-timer { font-size: 2.2rem; font-weight: 800; letter-spacing: 3px; color: #222; }
     .exam-timer.red { color: #dc3545; }
+    @media (max-width: 768px) {
+        .exam-title { font-size: 1.1rem; }
+        .exam-timer { font-size: 1.6rem; }
+    }
     .exam-cols { display: flex; gap: 16px; margin-top: 12px; }
     .exam-question-frame { flex: 2; border: 1px solid #ddd; border-radius: 10px; padding: 20px; background: #fff; }
     .exam-map-frame { flex: 1; border: 1px solid #ddd; border-radius: 10px; padding: 16px; background: #f9f9f9; }
@@ -67,6 +71,7 @@ def render_exam_progress(logo_tag):
     </div>
     """, unsafe_allow_html=True)
 
+
     # פופאפ זמן נגמר
     if frozen and not finished:
         st.error("⏰ זמן הבחינה הסתיים — לחץ/י על **סיים בחינה** להגשה")
@@ -75,9 +80,8 @@ def render_exam_progress(logo_tag):
     col_q, col_map = st.columns([2, 1])
 
     with col_q:
-        st.markdown("**פריים שאלה**")
         q_num = current + 1
-        st.markdown(f"**שאלה {q_num} מתוך {EXAM_QUESTIONS}**")
+        st.markdown(f"**שאלה {q_num}**")
         st.markdown(f"_[כאן תופיע השאלה שתיווצר מהמודל עבור נושא: {subject}]_")
 
         # תשובות
