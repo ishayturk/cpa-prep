@@ -18,7 +18,7 @@ def render_exam_progress(logo_tag):
     .exam-timer { font-size: 2.2rem; font-weight: 800; letter-spacing: 3px; color: #222; }
     .exam-timer.red { color: #dc3545; }
     @media (max-width: 768px) {
-        .exam-title { font-size: 1.1rem; }
+        .exam-title { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .exam-timer { font-size: 1.6rem; }
     }
     .exam-cols { display: flex; gap: 16px; margin-top: 12px; }
