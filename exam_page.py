@@ -84,7 +84,7 @@ def render_exam_instructions(logo_tag):
         if st.button("התחל/י בחינה", disabled=not confirmed):
             st.session_state.page = "exam_progress"
             st.rerun()
-            st.stop()
+
     with col2:
         if st.button("חזרה לבחירת נושא"):
             st.session_state.page = "exam_topic"
@@ -93,3 +93,67 @@ def render_exam_instructions(logo_tag):
     st.markdown("</div>", unsafe_allow_html=True)
 
 # סוף קובץ
+
+
+def render_exam_feedback(logo_tag):
+    # exam_page.py | render_exam_feedback | Version: v1.0
+    import math
+    from utils import render_top_bar
+
+    st.markdown('<div class="wrap">', unsafe_allow_html=True)
+    render_top_bar(logo_tag)
+
+    subject = st.session_state.get("exam_subject", "")
+    answers = st.session_state.get("exam_answers", [])
+    total = len(answers)
+
+    # שאלות דמה — בעתיד יוחלפו בשאלות אמיתיות
+    # כרגע: תשובה נכונה היא תמיד index 0
+    correct_answer_idx = 0
+    answer_texts = ["א. תשובה ראשונה", "ב. תשובה שנייה", "ג. תשובה שלישית", "ד. תשובה רביעית"]
+    correct_text = answer_texts[correct_answer_idx]
+
+    # חישוב ציון
+    answered = [i for i, a in enumerate(answers) if a is not None]
+    correct = [i for i in answered if answers[i] == correct_answer_idx]
+    correct_count = len(correct)
+    score = math.ceil(100 / total * correct_count) if total > 0 else 0
+
+    # כותרת
+    st.markdown(f"### {subject}")
+    st.markdown(f"**ציון: {score}** &nbsp;&nbsp; פתרת {correct_count} שאלות מתוך {total} שאלות הבחינה")
+    st.markdown("---")
+
+    # משוב לכל שאלה
+    first_unanswered = None
+    for i in range(total):
+        a = answers[i]
+        if a is None:
+            if first_unanswered is None:
+                first_unanswered = i + 1
+            continue
+
+        st.markdown(f"**שאלה {i + 1}**")
+        if a == correct_answer_idx:
+            st.markdown('<div style="color:#1a7a1a; font-weight:bold;">✓ נכון</div>', unsafe_allow_html=True)
+        else:
+            user_text = answer_texts[a]
+            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px; margin-bottom:4px;">✗ טעות: {user_text}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px;">תשובה נכונה: {correct_text}</div>', unsafe_allow_html=True)
+        st.markdown("")
+
+    # שאלות שלא נענו
+    if first_unanswered is not None:
+        st.markdown("---")
+        st.markdown(f"**שאלות {first_unanswered} עד {total} לא ניתנו תשובות**")
+
+    st.markdown("---")
+    if st.button("חזרה לתפריט הראשי"):
+        for k in ["exam_start_time", "exam_answers", "exam_visited",
+                  "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
+            st.session_state.pop(k, None)
+        st.query_params.clear()
+        st.session_state.page = "welcome"
+        st.rerun()
+
+    st.markdown("</div>", unsafe_allow_html=True)
