@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v3.7
+# exam_progress.py | Version: v3.8
 
 import streamlit as st
 import time
@@ -43,7 +43,7 @@ def render_exam_progress(logo_tag):
     .exam-fixed {{
         position:sticky; top:0; z-index:999;
         background:#fff; border-bottom:2px solid #eee;
-        padding:6px 0; direction:rtl;
+        padding:8px 0 10px 0; direction:rtl;
         display:flex; flex-direction:column; align-items:center;
     }}
     .exam-subject-line {{ font-size:1.6rem; font-weight:700; color:#222; margin-bottom:2px; text-align:center; }}
