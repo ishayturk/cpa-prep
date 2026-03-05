@@ -1,4 +1,4 @@
-# study_page.py | Version: v3.7
+# study_page.py | Version: v3.8
 
 import streamlit as st
 import google.generativeai as genai
@@ -267,21 +267,21 @@ def _render_inline_quiz():
     qc1, qc2, qc3 = st.columns(3)
     with qc1:
         st.markdown('<div class="quiz-action-btn">', unsafe_allow_html=True)
-        if st.button("בדוק תשובה", disabled=(not has_answer or checked), key=f"check_{idx}", use_container_width=True):
+        if st.button("בדוק תשובה", disabled=(not has_answer or checked), key=f"check_{idx}"):
             st.session_state.quiz_checked[idx] = True
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     with qc2:
         st.markdown('<div class="quiz-action-btn">', unsafe_allow_html=True)
         if is_last:
-            st.button("לשאלה הבאה", disabled=True, key=f"next_{idx}", use_container_width=True)
+            st.button("לשאלה הבאה", disabled=True, key=f"next_{idx}")
         else:
-            if st.button("לשאלה הבאה", disabled=(not checked), key=f"next_{idx}", use_container_width=True):
+            if st.button("לשאלה הבאה", disabled=(not checked), key=f"next_{idx}"):
                 st.session_state.quiz_idx += 1
                 st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
     with qc3:
-        if st.button("סיכום", disabled=not (is_last and checked), key=f"summary_{idx}", use_container_width=True):
+        if st.button("סיכום", disabled=not (is_last and checked), key=f"summary_{idx}"):
             st.session_state.quiz_show_summary = True
             st.rerun()
     st.markdown('</div>', unsafe_allow_html=True)
