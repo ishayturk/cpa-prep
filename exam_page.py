@@ -1,4 +1,4 @@
-# exam_page.py | Version: v1.0
+# exam_page.py | Version: v1.1
 
 import streamlit as st
 from utils import render_top_bar
@@ -96,7 +96,7 @@ def render_exam_instructions(logo_tag):
 
 
 def render_exam_feedback(logo_tag):
-    # exam_page.py | render_exam_feedback | Version: v1.0
+    # exam_page.py | render_exam_feedback | Version: v1.1
     import math
     from utils import render_top_bar
 
@@ -139,15 +139,13 @@ def render_exam_feedback(logo_tag):
         if i >= len(TEST_QUESTIONS):
             continue
         q_data = TEST_QUESTIONS[i]
-        st.markdown(f"**שאלה {i + 1}**")
         if a == q_data["correct"]:
-            st.markdown('<div style="color:#1a7a1a; font-weight:bold;">✓ נכון</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="color:#1a7a1a; font-weight:bold; margin-bottom:4px;">שאלה {i+1}: ✓ נכון</div>', unsafe_allow_html=True)
         else:
             user_text = q_data["answers"][a]
             correct_text = q_data["answers"][q_data["correct"]]
-            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px; margin-bottom:4px;">✗ טעות: {user_text}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px;">תשובה נכונה: {correct_text}</div>', unsafe_allow_html=True)
-        st.markdown("")
+            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px 6px 0 0; margin-bottom:1px;">שאלה {i+1}: ✗ טעות, ענית: {user_text}</div>', unsafe_allow_html=True)
+            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:0 0 6px 6px; margin-bottom:4px;">תשובה נכונה: {correct_text}</div>', unsafe_allow_html=True)
 
     # שאלות שלא נענו
     if first_unanswered is not None:
