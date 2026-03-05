@@ -1,4 +1,4 @@
-# study_page.py | Version: v3.9
+# study_page.py | Version: v4.0
 
 import streamlit as st
 import google.generativeai as genai
@@ -168,7 +168,7 @@ def render_study(logo_tag):
             @media (max-width: 768px) {
                 .quiz-btn { width: 100% !important; }
                 .quiz-btn button { width: auto !important; display: block; margin: 0 auto 8px auto; }
-                .quiz-anchor { display: block; text-align: center; margin-bottom: 8px; }
+                .quiz-anchor { display: block; text-align: right; margin-bottom: 8px; }
             }
             </style>
             """, unsafe_allow_html=True)
@@ -254,10 +254,13 @@ def _render_inline_quiz():
     st.markdown("""
     <style>
     .quiz-action-btn button { background-color: #e0f2fe !important; width: auto !important; }
+    .quiz-action-btn { margin-bottom: 0 !important; }
+    div[data-testid="stVerticalBlock"]:has(.quiz-action-btn) > div { gap: 4px !important; margin-bottom: 0 !important; }
     @media (max-width: 768px) {
         .quiz-action-btn button { width: auto !important; display: inline-block !important; }
-        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) { flex-wrap: wrap !important; justify-content: center !important; }
-        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) > div[data-testid="column"] { flex: 0 0 auto !important; width: auto !important; }
+        .quiz-action-btn > div { margin-bottom: 4px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) { flex-wrap: wrap !important; justify-content: center !important; gap: 4px !important; }
+        div[data-testid="stHorizontalBlock"]:has(.quiz-action-btn) > div[data-testid="column"] { flex: 0 0 auto !important; width: auto !important; margin-bottom: 0 !important; }
     }
     </style>
     """, unsafe_allow_html=True)
