@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v2.2
+# exam_progress.py | Version: v2.3
 
 import streamlit as st
 import time
@@ -120,7 +120,7 @@ def render_exam_progress(logo_tag):
                 st.session_state.exam_visited[st.session_state.exam_current] = True
                 st.rerun()
         with nav3:
-            can_finish = has_answer or frozen
+            can_finish = frozen or st.session_state.exam_answers[EXAM_QUESTIONS - 1] is not None
             if st.button("סיים בחינה", disabled=not can_finish):
                 st.session_state.exam_finished = True
                 st.session_state.page = "exam_feedback"
