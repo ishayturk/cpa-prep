@@ -107,15 +107,18 @@ def render_exam_feedback(logo_tag):
     answers = st.session_state.get("exam_answers", [])
     total = len(answers)
 
-    # שאלות דמה — בעתיד יוחלפו בשאלות אמיתיות
-    # כרגע: תשובה נכונה היא תמיד index 0
-    correct_answer_idx = 0
-    answer_texts = ["א. תשובה ראשונה", "ב. תשובה שנייה", "ג. תשובה שלישית", "ד. תשובה רביעית"]
-    correct_text = answer_texts[correct_answer_idx]
+    # 5 שאלות בדיקה עם תשובות ידועות
+    TEST_QUESTIONS = [
+        {"q": "מה סכום זוויות משולש?", "answers": ["90°", "180°", "270°", "360°"], "correct": 1},
+        {"q": "כמה ימים בשבוע?", "answers": ["5", "6", "7", "8"], "correct": 2},
+        {"q": "מה הצבע של השמיים?", "answers": ["ירוק", "אדום", "כחול", "צהוב"], "correct": 2},
+        {"q": "כמה חודשים בשנה?", "answers": ["10", "11", "12", "13"], "correct": 2},
+        {"q": "מה בירת ישראל?", "answers": ["תל אביב", "חיפה", "ירושלים", "באר שבע"], "correct": 2},
+    ]
 
     # חישוב ציון
-    answered = [i for i, a in enumerate(answers) if a is not None]
-    correct = [i for i in answered if answers[i] == correct_answer_idx]
+    answered = [i for i, a in enumerate(answers) if a is not None and i < len(TEST_QUESTIONS)]
+    correct = [i for i in answered if answers[i] == TEST_QUESTIONS[i]["correct"]]
     correct_count = len(correct)
     score = math.ceil(100 / total * correct_count) if total > 0 else 0
 
@@ -133,11 +136,15 @@ def render_exam_feedback(logo_tag):
                 first_unanswered = i + 1
             continue
 
+        if i >= len(TEST_QUESTIONS):
+            continue
+        q_data = TEST_QUESTIONS[i]
         st.markdown(f"**שאלה {i + 1}**")
-        if a == correct_answer_idx:
+        if a == q_data["correct"]:
             st.markdown('<div style="color:#1a7a1a; font-weight:bold;">✓ נכון</div>', unsafe_allow_html=True)
         else:
-            user_text = answer_texts[a]
+            user_text = q_data["answers"][a]
+            correct_text = q_data["answers"][q_data["correct"]]
             st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px; margin-bottom:4px;">✗ טעות: {user_text}</div>', unsafe_allow_html=True)
             st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px;">תשובה נכונה: {correct_text}</div>', unsafe_allow_html=True)
         st.markdown("")
