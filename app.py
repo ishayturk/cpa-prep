@@ -1,4 +1,4 @@
-# File: app.py | Version: CPA69
+# File: app.py | Version: CPA70
 
 import streamlit as st
 from PIL import Image
@@ -168,6 +168,7 @@ elif st.session_state.page == "exam_topic":
 
 elif st.session_state.page == "exam_instructions":
     render_exam_instructions(logo_tag)
+    st.stop()
 
 elif st.session_state.page == "exam_progress":
     render_exam_progress(logo_tag)
