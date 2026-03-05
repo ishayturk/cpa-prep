@@ -1,10 +1,11 @@
-# File: app.py | Version: CPA68
+# File: app.py | Version: CPA69
 
 import streamlit as st
 from PIL import Image
 from utils import inject_css, get_logo_tag, send_otp_email, clear_login_inputs_only, reset_login_flow, render_top_bar
 from study_page import render_study
 from exam_page import render_exam_topic, render_exam_instructions
+from exam_progress import render_exam_progress
 from quiz_page import render_quiz, render_quiz_summary
 import random
 import time
@@ -167,5 +168,8 @@ elif st.session_state.page == "exam_topic":
 
 elif st.session_state.page == "exam_instructions":
     render_exam_instructions(logo_tag)
+
+elif st.session_state.page == "exam_progress":
+    render_exam_progress(logo_tag)
 
 # סוף קובץ
