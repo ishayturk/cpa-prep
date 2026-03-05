@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v3.4
+# exam_progress.py | Version: v3.5
 
 import streamlit as st
 import time
@@ -34,45 +34,28 @@ def render_exam_progress(logo_tag):
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # CSS לכותרת קבועה ורוחב דף
+    # לוגו + שם משתמש — רגיל, לא קבוע
+    render_top_bar(logo_tag)
+
+    # פריים קבוע — כותרת בחינה + שעון (במחשב), שעון בלבד (בנייד)
     st.markdown(f"""
     <style>
-    /* כותרת קבועה */
-    .exam-sticky {{
-        position:fixed; top:0; left:0; right:0; z-index:9999;
+    .exam-fixed {{
+        position:sticky; top:0; z-index:999;
         background:#fff; border-bottom:2px solid #eee;
-        padding:6px 24px; direction:rtl;
+        padding:6px 0; text-align:center; direction:rtl;
     }}
-    .exam-topbar {{
-        display:flex; align-items:center; justify-content:space-between;
-    }}
-    .exam-username {{ font-size:0.9rem; font-weight:600; color:#444; }}
-    .exam-subject {{ font-size:1.3rem; font-weight:700; color:#222; text-align:center; flex:1; }}
-    .exam-clock-row {{ text-align:center; margin-top:2px; }}
+    .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; margin-bottom:2px; }}
     .exam-clock-val {{ font-size:1.5rem; font-weight:800; letter-spacing:3px; color:#222; }}
-
-    /* בנייד — הכל מוצג אבל רק שעון קבוע */
     @media (max-width:768px) {{
-        .exam-topbar {{ position:static; }}
-        .exam-sticky {{ padding:4px 12px; }}
-        .exam-clock-row {{ position:fixed; top:0; left:0; right:0; background:#fff;
-            border-bottom:2px solid #eee; text-align:center; z-index:9999; padding:4px; }}
-        .exam-topbar {{ position:relative; margin-top:40px; }}
+        .exam-subject-line {{ display:none; }}
     }}
-
-    /* רוחב דף בחינה */
-    .exam-wrap {{ max-width:75vw; margin:0 auto; padding:110px 16px 0 16px; }}
-    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; padding-top:60px; }} }}
+    .exam-wrap {{ max-width:75vw; margin:0 auto; padding:0 16px; }}
+    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
     </style>
-    <div class="exam-sticky">
-        <div class="exam-topbar">
-            <div class="exam-username">👤 {user_name}</div>
-            <div class="exam-subject">בחינה: {subject}</div>
-            <div>{logo_tag}</div>
-        </div>
-        <div class="exam-clock-row">
-            <span id="exam-clock-display" class="exam-clock-val">--:--</span>
-        </div>
+    <div class="exam-fixed">
+        <div class="exam-subject-line">בחינה: {subject}</div>
+        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
     </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
@@ -88,7 +71,6 @@ def render_exam_progress(logo_tag):
         var m = Math.floor(s / 60); var sec = s % 60;
         var str = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
         var color = (s <= 60) ? '#dc3545' : '#222';
-        // עדכון בדף הראשי
         try {{
             var el = window.parent.document.getElementById('exam-clock-display');
             if (el) {{ el.innerHTML = str; el.style.color = color; }}
