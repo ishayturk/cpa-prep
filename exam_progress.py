@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v4.1
+# exam_progress.py | Version: v4.2
 
 import streamlit as st
 import time
@@ -118,13 +118,13 @@ def render_exam_progress(logo_tag):
 
         nav1, nav2, nav3, nav4 = st.columns(4)
         with nav1:
-            if st.button("◀ הקודמת", disabled=(current == 0 or frozen)):
-                st.session_state.exam_current -= 1
-                st.rerun()
-        with nav2:
             if st.button("הבאה ▶", disabled=(current == EXAM_QUESTIONS - 1 or not has_answer or frozen)):
                 st.session_state.exam_current += 1
                 st.session_state.exam_visited[st.session_state.exam_current] = True
+                st.rerun()
+        with nav2:
+            if st.button("◀ הקודמת", disabled=(current == 0 or frozen)):
+                st.session_state.exam_current -= 1
                 st.rerun()
         with nav3:
             can_finish = frozen or st.session_state.exam_answers[EXAM_QUESTIONS - 1] is not None
