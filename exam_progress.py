@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v3.1
+# exam_progress.py | Version: v3.2
 
 import streamlit as st
 import time
@@ -34,11 +34,15 @@ def render_exam_progress(logo_tag):
     elapsed = time.time() - st.session_state.exam_start_time
     remaining = max(0, EXAM_SECONDS - int(elapsed))
 
+    # הקפאה בלחיצה הבאה כשנגמר הזמן
+    if remaining == 0 and not st.session_state.exam_frozen:
+        st.session_state.exam_frozen = True
+
     frozen = st.session_state.exam_frozen
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # טיימר JavaScript — כמו בתיווך
+    # טיימר JavaScript — ויזואלי בלבד, ללא שינוי URL
     timer_html = f"""
     <style>
         body {{ margin:0; padding:0; overflow:hidden; }}
@@ -65,11 +69,7 @@ def render_exam_progress(logo_tag):
             el.innerHTML = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
             el.style.color = (s <= 60) ? '#dc3545' : '#222';
         }}
-        if (s <= 0) {{
-            parent.location.href = parent.location.pathname + '?timeout=1';
-            return;
-        }}
-        setTimeout(updateClock, 1000);
+        if (s > 0) setTimeout(updateClock, 1000);
     }}
     updateClock();
     </script>
@@ -114,9 +114,13 @@ def render_exam_progress(logo_tag):
         with nav3:
             can_finish = frozen or st.session_state.exam_answers[EXAM_QUESTIONS - 1] is not None
             if st.button("סיים בחינה", disabled=not can_finish):
-                st.session_state.exam_finished = True
-                st.session_state.page = "exam_feedback"
-                st.rerun()
+                if frozen and not st.session_state.get("exam_timeout_ack"):
+                    st.session_state.exam_timeout_ack = True
+                    st.rerun()
+                else:
+                    st.session_state.exam_finished = True
+                    st.session_state.page = "exam_feedback"
+                    st.rerun()
         with nav4:
             if st.button("תפריט ראשי", key="exam_home"):
                 for k in ["exam_start_time", "exam_answers", "exam_visited",
