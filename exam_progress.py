@@ -14,12 +14,12 @@ def render_exam_progress(logo_tag):
     <style>
     .exam-wrap { max-width: 900px; margin: 0 auto; padding: 0 16px; }
     .exam-header { text-align: center; margin-bottom: 16px; }
-    .exam-title { font-size: 1.4rem; font-weight: 700; color: #222; margin-bottom: 4px; }
-    .exam-timer { font-size: 2.2rem; font-weight: 800; letter-spacing: 3px; color: #222; }
+    .exam-title { font-size: 1.4rem; font-weight: 700; color: #222; }
+    .exam-timer { font-size: 2.6rem; font-weight: 800; letter-spacing: 3px; color: #222; }
     .exam-timer.red { color: #dc3545; }
     @media (max-width: 768px) {
         .exam-title { font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .exam-timer { font-size: 1.6rem; }
+        .exam-timer { font-size: 2rem; }
     }
     .exam-cols { display: flex; gap: 16px; margin-top: 12px; }
     .exam-question-frame { flex: 2; border: 1px solid #ddd; border-radius: 10px; padding: 20px; background: #fff; }
@@ -66,8 +66,9 @@ def render_exam_progress(logo_tag):
     # כותרת + טיימר
     st.markdown(f"""
     <div class="exam-header">
-        <div class="exam-title">בחינה: {subject}</div>
-        <div class="{timer_class}">{timer_str}</div>
+        <span class="exam-title">בחינה: {subject}</span>
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <span class="{timer_class}">{timer_str}</span>
     </div>
     """, unsafe_allow_html=True)
 
