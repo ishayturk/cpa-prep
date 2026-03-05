@@ -84,11 +84,13 @@ def render_exam_instructions(logo_tag):
         if st.button("התחל/י בחינה", disabled=not confirmed):
             st.session_state.page = "exam_progress"
             st.rerun()
+            st.stop()
     with col2:
         if st.button("חזרה לבחירת נושא"):
             st.session_state.page = "exam_topic"
             st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
+    st.stop()
 
 # סוף קובץ
