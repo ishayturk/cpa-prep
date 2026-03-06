@@ -1,4 +1,4 @@
-# utils.py | Version: v1.6
+# utils.py | Version: v1.7
 
 import streamlit as st
 import resend
@@ -215,6 +215,36 @@ def inject_css():
     .mobile-only  { display: block; }
   }
 </style>
+
+<style>
+#scroll-top-btn {
+    display: none;
+    position: fixed;
+    bottom: 32px;
+    left: 24px;
+    z-index: 9999;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #aaa;
+    color: #fff;
+    font-size: 1.4rem;
+    border: none;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    opacity: 0.85;
+}
+#scroll-top-btn:hover { background: #888; opacity: 1; }
+</style>
+<button id="scroll-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script>
+window.addEventListener('scroll', function() {
+    var btn = document.getElementById('scroll-top-btn');
+    if (btn) btn.style.display = window.scrollY > 150 ? 'flex' : 'none';
+});
+</script>
 """, unsafe_allow_html=True)
 
 # -------------------------
