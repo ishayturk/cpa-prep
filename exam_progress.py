@@ -70,14 +70,16 @@ def render_exam_progress(logo_tag):
     <style>
     .exam-header {{
         background:#fff; border-bottom:2px solid #eee;
-        padding:4px 0 6px 0; direction:rtl;
-        display:flex; flex-direction:column; align-items:center;
+        padding:6px 16px; direction:rtl;
+        display:flex; align-items:center; justify-content:center; gap:24px;
         margin-bottom:8px;
     }}
-    .exam-subject-line {{ font-size:1.6rem; font-weight:700; color:#222; text-align:center; line-height:1.2; }}
-    .exam-clock-val {{ font-size:1.5rem; font-weight:800; letter-spacing:3px; color:#222; }}
+    .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; }}
+    .exam-clock-val {{ font-size:1.8rem; font-weight:800; letter-spacing:3px; color:#222; }}
     @media (max-width:768px) {{
-        .exam-subject-line {{ display:none; }}
+        .exam-header {{ flex-direction:column; gap:4px; padding:6px 8px; }}
+        .exam-subject-line {{ font-size:1rem; }}
+        .exam-clock-val {{ font-size:1.6rem; }}
     }}
     .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
     @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
