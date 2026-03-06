@@ -1,4 +1,4 @@
-# utils.py | Version: v2.4
+# utils.py | Version: v2.3
 
 import streamlit as st
 import resend
@@ -155,10 +155,6 @@ def inject_css():
     max-width: 80% !important;
     margin-left: auto !important;
     margin-right: auto !important;
-  }
-  section[data-testid="stMain"] > div,
-  section[data-testid="stMain"] > div > div {
-    overflow: visible !important;
   }
   section[data-testid="stMain"] > div,
   section[data-testid="stMain"] > div > div {
