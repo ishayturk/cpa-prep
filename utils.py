@@ -100,10 +100,11 @@ SYLLABUS = {
 }
 
 EXAM_FILES = {
-    "טכנולוגיות מידע": ["טכנולוגיות_מידע_01.json"],
+    "טכנולוגיות מידע": ["IT_01.json"],
 }
 
-EXAMS_DIR = "./data/exams"
+import os as _os
+EXAMS_DIR = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "data", "exams")
 
 # -------------------------
 # Logo
