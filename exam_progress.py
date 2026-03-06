@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.5
+# exam_progress.py | Version: v5.6
 
 import streamlit as st
 import time
@@ -71,8 +71,9 @@ def render_exam_progress(logo_tag):
     .exam-header {{
         background:#fff; border-bottom:2px solid #eee;
         padding:6px 16px; direction:rtl;
-        display:flex; flex-direction:row; align-items:center; justify-content:center; gap:24px;
-        margin-bottom:8px;
+        display:flex !important; flex-direction:row !important; flex-wrap:nowrap;
+        align-items:center; justify-content:center; gap:24px;
+        margin-bottom:8px; width:100%;
     }}
     .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.8rem; font-weight:800; letter-spacing:3px; color:#222; }}
