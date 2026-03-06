@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v4.6
+# exam_progress.py | Version: v4.7
 
 import streamlit as st
 import time
@@ -65,35 +65,25 @@ def render_exam_progress(logo_tag):
     # לוגו + שם משתמש — רגיל, לא קבוע
     render_top_bar(logo_tag)
 
-    # פריים קבוע — כותרת בחינה + שעון (במחשב), שורות נפרדות + sticky שעון (בנייד)
+    # כותרת קבועה — fixed במחשב ובנייד
     st.markdown(f"""
     <style>
-    /* מחשב: כותרת + שעון באותה שורה, sticky */
+    /* מחשב: כותרת + שעון בשורה אחת, fixed */
     .exam-fixed {{
-        position:sticky; top:0; z-index:999;
+        position:fixed; top:0; left:0; right:0; z-index:9999;
         background:#fff; border-bottom:2px solid #eee;
-        padding:6px 0; direction:rtl;
+        padding:6px 16px; direction:rtl;
         display:flex; align-items:center; justify-content:center; gap:24px;
     }}
     .exam-subject-line {{ font-size:1.4rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.4rem; font-weight:800; letter-spacing:3px; color:#222; }}
-    /* נייד: כותרת רגילה, שעון sticky בנפרד */
+    /* נייד: כותרת נעלמת, שעון בלבד */
     @media (max-width:768px) {{
-        .exam-fixed {{ position:static; border-bottom:none; padding:4px 0; flex-direction:column; gap:2px; }}
-        .exam-subject-line {{ font-size:1rem; }}
-        .exam-clock-sticky-mobile {{
-            position:sticky; top:0; z-index:999;
-            background:#fff; border-bottom:2px solid #eee;
-            text-align:center; padding:4px 0;
-        }}
-        .exam-clock-desktop {{ display:none; }}
+        .exam-subject-line {{ display:none; }}
     }}
-    @media (min-width:769px) {{
-        .exam-clock-sticky-mobile {{ display:none; }}
-    }}
-    /* מיכל עמוד */
-    .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
-    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
+    /* פנינג לתוכן שלא יתחבא מתחת לפריים הקבוע */
+    .exam-wrap {{ max-width:80vw; margin:0 auto; padding:64px 16px 0 16px; }}
+    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; padding-top:52px; }} }}
     /* כפתורי מפת שאלות */
     div[data-testid="stHorizontalBlock"] button {{
         min-width:44px !important; white-space:nowrap !important;
@@ -101,10 +91,7 @@ def render_exam_progress(logo_tag):
     </style>
     <div class="exam-fixed">
         <div class="exam-subject-line">בחינה: {subject}</div>
-        <span id="exam-clock-display" class="exam-clock-val exam-clock-desktop">--:--</span>
-    </div>
-    <div class="exam-clock-sticky-mobile">
-        <span id="exam-clock-display-mobile" class="exam-clock-val">--:--</span>
+        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
     </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
@@ -169,17 +156,17 @@ def render_exam_progress(logo_tag):
 
         nav1, nav2, nav3, nav4 = st.columns(4)
         with nav1:
-            if st.button("הבאה ▶", use_container_width=True, disabled=(current == q_count - 1 or not has_answer or frozen)):
+            if st.button("הבאה ▶", disabled=(current == q_count - 1 or not has_answer or frozen)):
                 st.session_state.exam_current += 1
                 st.session_state.exam_visited[st.session_state.exam_current] = True
                 st.rerun()
         with nav2:
-            if st.button("◀ הקודמת", use_container_width=True, disabled=(current == 0 or frozen)):
+            if st.button("◀ הקודמת", disabled=(current == 0 or frozen)):
                 st.session_state.exam_current -= 1
                 st.rerun()
         with nav3:
             can_finish = frozen or st.session_state.exam_answers[q_count - 1] is not None
-            if st.button("סיים/י", use_container_width=True, disabled=not can_finish):
+            if st.button("סיים/י", disabled=not can_finish):
                 if frozen and not st.session_state.get("exam_timeout_ack"):
                     st.session_state.exam_timeout_ack = True
                     st.rerun()
@@ -188,7 +175,7 @@ def render_exam_progress(logo_tag):
                     st.session_state.page = "exam_feedback"
                     st.rerun()
         with nav4:
-            if st.button("תפריט ראשי", use_container_width=True, key="exam_home"):
+            if st.button("תפריט ראשי", key="exam_home"):
                 for k in ["exam_start_time", "exam_answers", "exam_visited",
                           "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
                     st.session_state.pop(k, None)
