@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.2
+# exam_progress.py | Version: v5.3
 
 import streamlit as st
 import time
@@ -62,93 +62,59 @@ def render_exam_progress(logo_tag):
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # לוגו + שם משתמש
+    # לוגו + שם משתמש — רגיל, לא קבוע
     render_top_bar(logo_tag)
 
-    # CSS בסיסי לעמוד
-    st.markdown("""
+    # פריים קבוע — כותרת בחינה + שעון
+    st.markdown(f"""
     <style>
-    .exam-wrap { max-width:80vw; margin:0 auto; padding:0 16px; }
-    @media (max-width:768px) { .exam-wrap { max-width:100%; } }
-    div[data-testid="stHorizontalBlock"] button {
+    .exam-fixed {{
+        position:sticky; top:0; z-index:999;
+        background:#fff; border-bottom:2px solid #eee;
+        padding:2px 0 4px 0; direction:rtl;
+        display:flex; flex-direction:column; align-items:center;
+    }}
+    .exam-subject-line {{ font-size:1.6rem; font-weight:700; color:#222; margin-bottom:0; text-align:center; line-height:1.2; }}
+    .exam-clock-val {{ font-size:1.5rem; font-weight:800; letter-spacing:3px; color:#222; }}
+    @media (max-width:768px) {{
+        .exam-subject-line {{ display:none; }}
+    }}
+    .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
+    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
+    div[data-testid="stHorizontalBlock"] button {{
         min-width:44px !important; white-space:nowrap !important;
-    }
+    }}
     </style>
+    <div class="exam-fixed">
+        <div class="exam-subject-line">בחינה: {subject}</div>
+        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
+    </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
 
-    # כותרת + שעון קבועים — נבנים ב-window.parent דרך components.html
-    header_and_timer = f"""
+    # טיימר JavaScript — מעדכן רק את הספרות
+    timer_js = f"""
     <style>body{{margin:0;padding:0;overflow:hidden;}}</style>
     <script>
-    (function() {{
-        var subject = {repr(subject)};
-        var remaining = {remaining};
-        var isMobile = window.parent.innerWidth <= 768;
-
-        // בנה כותרת קבועה ב-parent אם עוד לא קיימת
-        if (!window.parent.document.getElementById('exam-header-bar')) {{
-            var bar = window.parent.document.createElement('div');
-            bar.id = 'exam-header-bar';
-
-            if (isMobile) {{
-                // נייד: כותרת + שעון בנפרד, רק שעון fixed
-                var subjectDiv = window.parent.document.createElement('div');
-                subjectDiv.style.cssText = 'text-align:center;font-size:1rem;font-weight:700;padding:6px 0;border-bottom:1px solid #eee;direction:rtl;';
-                subjectDiv.innerText = 'בחינה: ' + subject;
-
-                var clockDiv = window.parent.document.createElement('div');
-                clockDiv.id = 'exam-header-bar';
-                clockDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;text-align:center;padding:5px 0;';
-                clockDiv.innerHTML = '<span id="exam-clock-display" style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:#222;">--:--</span>';
-
-                // נייד: שעון fixed אחרי הלוגו
-                var logo = window.parent.document.querySelector('[data-testid="stHeader"]') ||
-                           window.parent.document.querySelector('[data-testid="stToolbar"]') ||
-                           window.parent.document.querySelector('.stApp > header');
-                if (logo && logo.parentNode) {{
-                    logo.parentNode.insertBefore(clockDiv, logo.nextSibling);
-                }} else {{
-                    window.parent.document.body.prepend(clockDiv);
-                }}
-                var mainBlock = window.parent.document.querySelector('[data-testid="stMain"]');
-                if (mainBlock) mainBlock.style.paddingTop = '42px';
-            }} else {{
-                // מחשב: כותרת + שעון fixed — ממוקם אחרי הלוגו של Streamlit
-                // מחשב: fixed מתחת ללוגו — top מחושב לפי גובה הלוגו בפועל
-                bar.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;padding:8px 16px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:24px;';
-                bar.innerHTML = '<div style="font-size:1.3rem;font-weight:700;color:#222;">בחינה: ' + subject + '</div><span id="exam-clock-display" style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:#222;">--:--</span>';
-                window.parent.document.body.appendChild(bar);
-                // חשב top לפי גובה הלוגו בפועל
-                setTimeout(function() {{
-                    var logoImg = window.parent.document.querySelector('.logo-wrap img');
-                    var topVal = logoImg ? (logoImg.getBoundingClientRect().bottom + window.parent.scrollY + 8) : 90;
-                    bar.style.top = topVal + 'px';
-                }}, 100);
-            }}
-        }}
-
-        // טיימר
-        var deadline = Date.now() + remaining * 1000;
-        function updateClock() {{
-            var s = Math.round((deadline - Date.now()) / 1000);
-            if (s < 0) s = 0;
-            var m = Math.floor(s / 60); var sec = s % 60;
-            var str = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
-            var color = (s <= 60) ? '#dc3545' : '#222';
-            try {{
-                var el = window.parent.document.getElementById('exam-clock-display');
-                if (el) {{ el.innerHTML = str; el.style.color = color; }}
-            }} catch(e) {{}}
-            if (s > 0) setTimeout(updateClock, 1000);
-        }}
-        updateClock();
-    }})();
+    var deadline = Date.now() + {remaining} * 1000;
+    function updateClock() {{
+        var s = Math.round((deadline - Date.now()) / 1000);
+        if (s < 0) s = 0;
+        var m = Math.floor(s / 60); var sec = s % 60;
+        var str = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+        var color = (s <= 60) ? '#dc3545' : '#222';
+        try {{
+            var el = window.parent.document.getElementById('exam-clock-display');
+            if (el) {{ el.innerHTML = str; el.style.color = color; }}
+        }} catch(e) {{}}
+        if (s > 0) setTimeout(updateClock, 1000);
+    }}
+    updateClock();
     </script>
     """
-    components.html(header_and_timer, height=0)
+    components.html(timer_js, height=0)
 
-    # הודעת תום זמן
+        # הודעת תום זמן
     if frozen and not finished:
         st.error("⏰ זמן הבחינה הסתיים — לחץ/י על **סיים בחינה** להגשה")
 
