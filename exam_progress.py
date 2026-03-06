@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.0
+# exam_progress.py | Version: v5.2
 
 import streamlit as st
 import time
@@ -102,17 +102,29 @@ def render_exam_progress(logo_tag):
                 clockDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;text-align:center;padding:5px 0;';
                 clockDiv.innerHTML = '<span id="exam-clock-display" style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:#222;">--:--</span>';
 
-                window.parent.document.body.prepend(clockDiv);
-                // הכנס כותרת לפני התוכן הראשי
-                var mainBlock = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+                // נייד: שעון fixed אחרי הלוגו
+                var logo = window.parent.document.querySelector('[data-testid="stHeader"]') ||
+                           window.parent.document.querySelector('[data-testid="stToolbar"]') ||
+                           window.parent.document.querySelector('.stApp > header');
+                if (logo && logo.parentNode) {{
+                    logo.parentNode.insertBefore(clockDiv, logo.nextSibling);
+                }} else {{
+                    window.parent.document.body.prepend(clockDiv);
+                }}
+                var mainBlock = window.parent.document.querySelector('[data-testid="stMain"]');
                 if (mainBlock) mainBlock.style.paddingTop = '42px';
             }} else {{
-                // מחשב: כותרת + שעון fixed יחד
-                bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;padding:8px 16px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:24px;';
+                // מחשב: כותרת + שעון fixed — ממוקם אחרי הלוגו של Streamlit
+                // מחשב: fixed מתחת ללוגו — top מחושב לפי גובה הלוגו בפועל
+                bar.style.cssText = 'position:fixed;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;padding:8px 16px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:24px;';
                 bar.innerHTML = '<div style="font-size:1.3rem;font-weight:700;color:#222;">בחינה: ' + subject + '</div><span id="exam-clock-display" style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:#222;">--:--</span>';
-                window.parent.document.body.prepend(bar);
-                var mainBlock = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
-                if (mainBlock) mainBlock.style.paddingTop = '50px';
+                window.parent.document.body.appendChild(bar);
+                // חשב top לפי גובה הלוגו בפועל
+                setTimeout(function() {{
+                    var logoImg = window.parent.document.querySelector('.logo-wrap img');
+                    var topVal = logoImg ? (logoImg.getBoundingClientRect().bottom + window.parent.scrollY + 8) : 90;
+                    bar.style.top = topVal + 'px';
+                }}, 100);
             }}
         }}
 
