@@ -1,4 +1,4 @@
-# File: app.py | Version: CPA73
+# File: app.py | Version: CPA74
 
 import streamlit as st
 from PIL import Image
@@ -21,7 +21,7 @@ except Exception:
 st.set_page_config(
     page_title="רואה חשבון בקליק",
     page_icon=icon,
-    layout="centered",
+    layout="wide",
     initial_sidebar_state="collapsed",
 )
 
