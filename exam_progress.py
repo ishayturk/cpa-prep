@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v4.7
+# exam_progress.py | Version: v4.8
 
 import streamlit as st
 import time
@@ -65,34 +65,62 @@ def render_exam_progress(logo_tag):
     # לוגו + שם משתמש — רגיל, לא קבוע
     render_top_bar(logo_tag)
 
-    # כותרת קבועה — fixed במחשב ובנייד
+    # כותרת + שעון — מוצגים רגיל, JS מסדר fixed אחרי load
     st.markdown(f"""
     <style>
-    /* מחשב: כותרת + שעון בשורה אחת, fixed */
     .exam-fixed {{
-        position:fixed; top:0; left:0; right:0; z-index:9999;
         background:#fff; border-bottom:2px solid #eee;
         padding:6px 16px; direction:rtl;
         display:flex; align-items:center; justify-content:center; gap:24px;
     }}
     .exam-subject-line {{ font-size:1.4rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.4rem; font-weight:800; letter-spacing:3px; color:#222; }}
-    /* נייד: כותרת נעלמת, שעון בלבד */
-    @media (max-width:768px) {{
-        .exam-subject-line {{ display:none; }}
-    }}
-    /* פנינג לתוכן שלא יתחבא מתחת לפריים הקבוע */
-    .exam-wrap {{ max-width:80vw; margin:0 auto; padding:64px 16px 0 16px; }}
-    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; padding-top:52px; }} }}
-    /* כפתורי מפת שאלות */
+    .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
+    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
     div[data-testid="stHorizontalBlock"] button {{
         min-width:44px !important; white-space:nowrap !important;
     }}
     </style>
-    <div class="exam-fixed">
+    <div class="exam-fixed" id="exam-fixed-bar">
         <div class="exam-subject-line">בחינה: {subject}</div>
         <span id="exam-clock-display" class="exam-clock-val">--:--</span>
     </div>
+    <script>
+    (function() {{
+        function fixBar() {{
+            try {{
+                var bar = window.parent.document.getElementById('exam-fixed-bar');
+                if (!bar) return;
+                var isMobile = window.parent.innerWidth <= 768;
+                if (isMobile) {{
+                    // נייד: כותרת static, שעון fixed בנפרד
+                    bar.style.position = 'static';
+                    bar.style.flexDirection = 'column';
+                    bar.style.gap = '2px';
+                    bar.style.border = 'none';
+                    // הוסף שעון fixed נפרד אם עוד לא קיים
+                    if (!window.parent.document.getElementById('clock-fixed-mobile')) {{
+                        var clockBar = window.parent.document.createElement('div');
+                        clockBar.id = 'clock-fixed-mobile';
+                        clockBar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;text-align:center;padding:4px 0;';
+                        var clockEl = window.parent.document.getElementById('exam-clock-display');
+                        if (clockEl) {{
+                            var clone = clockEl.cloneNode(true);
+                            clone.id = 'exam-clock-display';
+                            clockBar.appendChild(clone);
+                            clockEl.style.display = 'none';
+                        }}
+                        window.parent.document.body.prepend(clockBar);
+                    }}
+                }} else {{
+                    // מחשב: כותרת+שעון fixed יחד
+                    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;padding:6px 16px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:24px;';
+                }}
+            }} catch(e) {{}}
+        }}
+        setTimeout(fixBar, 300);
+    }})();
+    </script>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
 
