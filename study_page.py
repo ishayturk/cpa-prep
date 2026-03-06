@@ -1,4 +1,4 @@
-# study_page.py | Version: v4.1
+# study_page.py | Version: v4.2
 
 import streamlit as st
 import google.generativeai as genai
@@ -173,7 +173,7 @@ def render_study(logo_tag):
             </style>
             """, unsafe_allow_html=True)
 
-            c1, c2, c3, c4 = st.columns(4)
+            c1, c2, c3 = st.columns(3)
             with c1:
                 st.markdown('<div class="quiz-btn">', unsafe_allow_html=True)
                 if st.button("לשאלון תת נושא", key="lesson_quiz_sub", disabled=quiz_open):
@@ -187,8 +187,6 @@ def render_study(logo_tag):
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
             with c3:
-                st.empty()
-            with c4:
                 st.markdown('<div class="quiz-btn">', unsafe_allow_html=True)
                 if st.button("לעמוד הראשי", key="lesson_home"):
                     for k in ["selected_topic", "selected_sub", "lesson_txt", "is_loading"] + QUIZ_KEYS:
