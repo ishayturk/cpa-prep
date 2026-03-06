@@ -114,7 +114,7 @@ def render_exam_progress(logo_tag):
     """
     components.html(timer_js, height=0)
 
-        # הודעת תום זמן
+    # הודעת תום זמן
     if frozen and not finished:
         st.error("⏰ זמן הבחינה הסתיים — לחץ/י על **סיים בחינה** להגשה")
 
