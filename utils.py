@@ -1,4 +1,4 @@
-# utils.py | Version: v1.9
+# utils.py | Version: v2.0
 
 import streamlit as st
 import resend
@@ -219,14 +219,13 @@ def inject_css():
 .scroll-top-btn {
     position: fixed;
     bottom: 32px;
-    left: 24px;
+    left: 60px;
     z-index: 9999;
     width: 46px;
     height: 46px;
     border-radius: 50%;
     background: rgba(170,170,170,0.85);
     color: #fff;
-    font-size: 1.5rem;
     border: none;
     cursor: pointer;
     display: flex;
@@ -234,11 +233,14 @@ def inject_css():
     justify-content: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     text-decoration: none;
-    line-height: 1;
 }
 .scroll-top-btn:hover { background: rgba(130,130,130,0.95); }
 </style>
-<a class="scroll-top-btn" href="#top">↑</a>
+<a class="scroll-top-btn" href="#top">
+  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</a>
 """, unsafe_allow_html=True)
 
 # -------------------------
