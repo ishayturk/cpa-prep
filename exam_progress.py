@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.3
+# exam_progress.py | Version: v5.4
 
 import streamlit as st
 import time
@@ -65,16 +65,16 @@ def render_exam_progress(logo_tag):
     # לוגו + שם משתמש — רגיל, לא קבוע
     render_top_bar(logo_tag)
 
-    # פריים קבוע — כותרת בחינה + שעון
+    # כותרת בחינה + שעון — static
     st.markdown(f"""
     <style>
-    .exam-fixed {{
-        position:sticky; top:0; z-index:999;
+    .exam-header {{
         background:#fff; border-bottom:2px solid #eee;
-        padding:2px 0 4px 0; direction:rtl;
+        padding:4px 0 6px 0; direction:rtl;
         display:flex; flex-direction:column; align-items:center;
+        margin-bottom:8px;
     }}
-    .exam-subject-line {{ font-size:1.6rem; font-weight:700; color:#222; margin-bottom:0; text-align:center; line-height:1.2; }}
+    .exam-subject-line {{ font-size:1.6rem; font-weight:700; color:#222; text-align:center; line-height:1.2; }}
     .exam-clock-val {{ font-size:1.5rem; font-weight:800; letter-spacing:3px; color:#222; }}
     @media (max-width:768px) {{
         .exam-subject-line {{ display:none; }}
@@ -85,7 +85,7 @@ def render_exam_progress(logo_tag):
         min-width:44px !important; white-space:nowrap !important;
     }}
     </style>
-    <div class="exam-fixed">
+    <div class="exam-header">
         <div class="exam-subject-line">בחינה: {subject}</div>
         <span id="exam-clock-display" class="exam-clock-val">--:--</span>
     </div>
@@ -192,5 +192,25 @@ def render_exam_progress(logo_tag):
                             st.rerun()
 
     st.markdown("</div></div>", unsafe_allow_html=True)
+
+    # כפתור גלילה לראש העמוד — רק בדף הבחינה
+    st.markdown("""
+    <style>
+    .scroll-top-btn {
+        position: fixed; bottom: 32px; left: 150px; z-index: 9999;
+        width: 46px; height: 46px; border-radius: 50%;
+        background: rgba(170,170,170,0.85); color: #fff;
+        border: none; cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25); text-decoration: none;
+    }
+    .scroll-top-btn:hover { background: rgba(130,130,130,0.95); }
+    </style>
+    <a class="scroll-top-btn" href="#top">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </a>
+    """, unsafe_allow_html=True)
 
 # סוף קובץ
