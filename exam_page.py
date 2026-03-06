@@ -96,9 +96,10 @@ def render_exam_instructions(logo_tag):
 
 
 def render_exam_feedback(logo_tag):
-    # exam_page.py | render_exam_feedback | Version: v1.1
+    # exam_page.py | render_exam_feedback | Version: v2.0
     import math
-    from utils import render_top_bar
+    import json, os
+    from utils import render_top_bar, EXAM_FILES, EXAMS_DIR
 
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     render_top_bar(logo_tag)
@@ -107,50 +108,79 @@ def render_exam_feedback(logo_tag):
     answers = st.session_state.get("exam_answers", [])
     total = len(answers)
 
-    # 5 שאלות בדיקה עם תשובות ידועות
-    TEST_QUESTIONS = [
-        {"q": "מה סכום זוויות משולש?", "answers": ["90°", "180°", "270°", "360°"], "correct": 1},
-        {"q": "כמה ימים בשבוע?", "answers": ["5", "6", "7", "8"], "correct": 2},
-        {"q": "מה הצבע של השמיים?", "answers": ["ירוק", "אדום", "כחול", "צהוב"], "correct": 2},
-        {"q": "כמה חודשים בשנה?", "answers": ["10", "11", "12", "13"], "correct": 2},
-        {"q": "מה בירת ישראל?", "answers": ["תל אביב", "חיפה", "ירושלים", "באר שבע"], "correct": 2},
-    ]
+    # טעינת בחינה מ-JSON
+    exam_data = None
+    files = EXAM_FILES.get(subject, [])
+    if files:
+        path = os.path.join(EXAMS_DIR, files[0])
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                exam_data = json.load(f)
+        except Exception:
+            pass
+
+    questions = exam_data.get("questions", {}) if exam_data else {}
 
     # חישוב ציון
-    answered = [i for i, a in enumerate(answers) if a is not None and i < len(TEST_QUESTIONS)]
-    correct = [i for i in answered if answers[i] == TEST_QUESTIONS[i]["correct"]]
-    correct_count = len(correct)
-    score = math.ceil(100 / total * correct_count) if total > 0 else 0
+    correct_count = 0
+    answered_count = 0
+    for i, a in enumerate(answers):
+        if a is None:
+            continue
+        answered_count += 1
+        q_data = questions.get(str(i + 1), {})
+        if not q_data:
+            continue
+        opts = list(q_data.get("options", {}).keys())
+        correct_label = q_data.get("correct_label", "")
+        if opts and a < len(opts) and opts[a] == correct_label:
+            correct_count += 1
+
+    score = round(100 * correct_count / total) if total > 0 else 0
 
     # כותרת
     st.markdown(f"### {subject}")
-    st.markdown(f"**ציון: {score}** &nbsp;&nbsp; פתרת {correct_count} שאלות מתוך {total} שאלות הבחינה")
+    st.markdown(f"**ציון: {score}** &nbsp;&nbsp; {correct_count} נכון מתוך {answered_count} שאלות שנענו")
     st.markdown("---")
 
     # משוב לכל שאלה
-    first_unanswered = None
     for i in range(total):
         a = answers[i]
         if a is None:
-            if first_unanswered is None:
-                first_unanswered = i + 1
+            st.markdown(f'<div style="color:#888; margin-bottom:4px;">שאלה {i+1}: לא נענתה</div>', unsafe_allow_html=True)
             continue
 
-        if i >= len(TEST_QUESTIONS):
+        q_data = questions.get(str(i + 1), {})
+        if not q_data:
             continue
-        q_data = TEST_QUESTIONS[i]
-        if a == q_data["correct"]:
-            st.markdown(f'<div style="color:#1a7a1a; font-weight:bold; margin-bottom:4px;">שאלה {i+1}: ✓ נכון</div>', unsafe_allow_html=True)
+
+        opts_dict = q_data.get("options", {})
+        opts_keys = list(opts_dict.keys())
+        correct_label = q_data.get("correct_label", "")
+        explanation = q_data.get("explanation", "")
+
+        user_label = opts_keys[a] if a < len(opts_keys) else "?"
+        user_text = opts_dict.get(user_label, "")
+        correct_text = opts_dict.get(correct_label, "")
+
+        if user_label == correct_label:
+            st.markdown(f'<div style="background:#d4edda; padding:8px 12px; border-radius:6px; margin-bottom:6px;">'
+                        f'<b>שאלה {i+1}: ✓ נכון</b></div>', unsafe_allow_html=True)
         else:
-            user_text = q_data["answers"][a]
-            correct_text = q_data["answers"][q_data["correct"]]
-            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:6px 6px 0 0; margin-bottom:1px;">שאלה {i+1}: ✗ טעות, ענית: {user_text}</div>', unsafe_allow_html=True)
-            st.markdown(f'<div style="background:#f8d7da; padding:8px; border-radius:0 0 6px 6px; margin-bottom:4px;">תשובה נכונה: {correct_text}</div>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="background:#f8d7da; padding:8px 12px; border-radius:6px 6px 0 0; margin-bottom:1px;">'
+                f'<b>שאלה {i+1}: ✗ טעית</b> — ענית: {user_label}. {user_text}</div>',
+                unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="background:#fff3cd; padding:8px 12px; border-radius:0 0 6px 6px; margin-bottom:1px;">'
+                f'תשובה נכונה: {correct_label}. {correct_text}</div>',
+                unsafe_allow_html=True)
 
-    # שאלות שלא נענו
-    if first_unanswered is not None:
-        st.markdown("---")
-        st.markdown(f"**שאלות {first_unanswered} עד {total} לא ניתנו תשובות**")
+        if explanation:
+            st.markdown(
+                f'<div style="background:#f0f4ff; padding:6px 12px; border-radius:0 0 6px 6px; '
+                f'font-size:0.88rem; color:#444; margin-bottom:8px;">{explanation}</div>',
+                unsafe_allow_html=True)
 
     st.markdown("---")
     if st.button("חזרה לתפריט הראשי"):
