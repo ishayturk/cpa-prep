@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v4.8
+# exam_progress.py | Version: v5.0
 
 import streamlit as st
 import time
@@ -62,91 +62,79 @@ def render_exam_progress(logo_tag):
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # לוגו + שם משתמש — רגיל, לא קבוע
+    # לוגו + שם משתמש
     render_top_bar(logo_tag)
 
-    # כותרת + שעון — מוצגים רגיל, JS מסדר fixed אחרי load
-    st.markdown(f"""
+    # CSS בסיסי לעמוד
+    st.markdown("""
     <style>
-    .exam-fixed {{
-        background:#fff; border-bottom:2px solid #eee;
-        padding:6px 16px; direction:rtl;
-        display:flex; align-items:center; justify-content:center; gap:24px;
-    }}
-    .exam-subject-line {{ font-size:1.4rem; font-weight:700; color:#222; }}
-    .exam-clock-val {{ font-size:1.4rem; font-weight:800; letter-spacing:3px; color:#222; }}
-    .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
-    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
-    div[data-testid="stHorizontalBlock"] button {{
+    .exam-wrap { max-width:80vw; margin:0 auto; padding:0 16px; }
+    @media (max-width:768px) { .exam-wrap { max-width:100%; } }
+    div[data-testid="stHorizontalBlock"] button {
         min-width:44px !important; white-space:nowrap !important;
-    }}
+    }
     </style>
-    <div class="exam-fixed" id="exam-fixed-bar">
-        <div class="exam-subject-line">בחינה: {subject}</div>
-        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
-    </div>
-    <script>
-    (function() {{
-        function fixBar() {{
-            try {{
-                var bar = window.parent.document.getElementById('exam-fixed-bar');
-                if (!bar) return;
-                var isMobile = window.parent.innerWidth <= 768;
-                if (isMobile) {{
-                    // נייד: כותרת static, שעון fixed בנפרד
-                    bar.style.position = 'static';
-                    bar.style.flexDirection = 'column';
-                    bar.style.gap = '2px';
-                    bar.style.border = 'none';
-                    // הוסף שעון fixed נפרד אם עוד לא קיים
-                    if (!window.parent.document.getElementById('clock-fixed-mobile')) {{
-                        var clockBar = window.parent.document.createElement('div');
-                        clockBar.id = 'clock-fixed-mobile';
-                        clockBar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;text-align:center;padding:4px 0;';
-                        var clockEl = window.parent.document.getElementById('exam-clock-display');
-                        if (clockEl) {{
-                            var clone = clockEl.cloneNode(true);
-                            clone.id = 'exam-clock-display';
-                            clockBar.appendChild(clone);
-                            clockEl.style.display = 'none';
-                        }}
-                        window.parent.document.body.prepend(clockBar);
-                    }}
-                }} else {{
-                    // מחשב: כותרת+שעון fixed יחד
-                    bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;padding:6px 16px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:24px;';
-                }}
-            }} catch(e) {{}}
-        }}
-        setTimeout(fixBar, 300);
-    }})();
-    </script>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
 
-    # טיימר JavaScript — מעדכן רק את הספרות
-    timer_js = f"""
+    # כותרת + שעון קבועים — נבנים ב-window.parent דרך components.html
+    header_and_timer = f"""
     <style>body{{margin:0;padding:0;overflow:hidden;}}</style>
     <script>
-    var deadline = Date.now() + {remaining} * 1000;
-    function updateClock() {{
-        var s = Math.round((deadline - Date.now()) / 1000);
-        if (s < 0) s = 0;
-        var m = Math.floor(s / 60); var sec = s % 60;
-        var str = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
-        var color = (s <= 60) ? '#dc3545' : '#222';
-        try {{
-            var el = window.parent.document.getElementById('exam-clock-display');
-            if (el) {{ el.innerHTML = str; el.style.color = color; }}
-            var el2 = window.parent.document.getElementById('exam-clock-display-mobile');
-            if (el2) {{ el2.innerHTML = str; el2.style.color = color; }}
-        }} catch(e) {{}}
-        if (s > 0) setTimeout(updateClock, 1000);
-    }}
-    updateClock();
+    (function() {{
+        var subject = {repr(subject)};
+        var remaining = {remaining};
+        var isMobile = window.parent.innerWidth <= 768;
+
+        // בנה כותרת קבועה ב-parent אם עוד לא קיימת
+        if (!window.parent.document.getElementById('exam-header-bar')) {{
+            var bar = window.parent.document.createElement('div');
+            bar.id = 'exam-header-bar';
+
+            if (isMobile) {{
+                // נייד: כותרת + שעון בנפרד, רק שעון fixed
+                var subjectDiv = window.parent.document.createElement('div');
+                subjectDiv.style.cssText = 'text-align:center;font-size:1rem;font-weight:700;padding:6px 0;border-bottom:1px solid #eee;direction:rtl;';
+                subjectDiv.innerText = 'בחינה: ' + subject;
+
+                var clockDiv = window.parent.document.createElement('div');
+                clockDiv.id = 'exam-header-bar';
+                clockDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;text-align:center;padding:5px 0;';
+                clockDiv.innerHTML = '<span id="exam-clock-display" style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:#222;">--:--</span>';
+
+                window.parent.document.body.prepend(clockDiv);
+                // הכנס כותרת לפני התוכן הראשי
+                var mainBlock = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+                if (mainBlock) mainBlock.style.paddingTop = '42px';
+            }} else {{
+                // מחשב: כותרת + שעון fixed יחד
+                bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;border-bottom:2px solid #eee;padding:8px 16px;direction:rtl;display:flex;align-items:center;justify-content:center;gap:24px;';
+                bar.innerHTML = '<div style="font-size:1.3rem;font-weight:700;color:#222;">בחינה: ' + subject + '</div><span id="exam-clock-display" style="font-size:1.3rem;font-weight:800;letter-spacing:3px;color:#222;">--:--</span>';
+                window.parent.document.body.prepend(bar);
+                var mainBlock = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+                if (mainBlock) mainBlock.style.paddingTop = '50px';
+            }}
+        }}
+
+        // טיימר
+        var deadline = Date.now() + remaining * 1000;
+        function updateClock() {{
+            var s = Math.round((deadline - Date.now()) / 1000);
+            if (s < 0) s = 0;
+            var m = Math.floor(s / 60); var sec = s % 60;
+            var str = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+            var color = (s <= 60) ? '#dc3545' : '#222';
+            try {{
+                var el = window.parent.document.getElementById('exam-clock-display');
+                if (el) {{ el.innerHTML = str; el.style.color = color; }}
+            }} catch(e) {{}}
+            if (s > 0) setTimeout(updateClock, 1000);
+        }}
+        updateClock();
+    }})();
     </script>
     """
-    components.html(timer_js, height=0)
+    components.html(header_and_timer, height=0)
 
     # הודעת תום זמן
     if frozen and not finished:
