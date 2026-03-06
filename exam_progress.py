@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v4.4
+# exam_progress.py | Version: v4.5
 
 import streamlit as st
 import time
@@ -69,38 +69,29 @@ def render_exam_progress(logo_tag):
     # פריים קבוע — כותרת בחינה + שעון (במחשב), שעון בלבד (בנייד)
     st.markdown(f"""
     <style>
+    /* כותרת קבועה */
     .exam-fixed {{
         position:sticky; top:0; z-index:999;
         background:#fff; border-bottom:2px solid #eee;
-        padding:0 0 4px 0; direction:rtl;
-        display:flex; flex-direction:column; align-items:center;
+        padding:4px 0; direction:rtl;
+        display:flex; align-items:center; justify-content:center; gap:24px;
     }}
-    .exam-subject-line {{ font-size:1.6rem; font-weight:700; color:#222; margin-bottom:0; text-align:center; line-height:1.2; }}
-    .exam-clock-val {{ font-size:1.5rem; font-weight:800; letter-spacing:3px; color:#222; }}
+    .exam-subject-line {{ font-size:1.4rem; font-weight:700; color:#222; }}
+    .exam-clock-val {{ font-size:1.4rem; font-weight:800; letter-spacing:3px; color:#222; }}
     @media (max-width:768px) {{
-        .exam-fixed {{ position:static; border-bottom:none; padding:0; }}
-        .exam-subject-line {{ font-size:1rem; }}
-        .exam-clock-sticky {{
-            position:sticky; top:0; z-index:999;
-            background:#fff; border-bottom:2px solid #eee;
-            text-align:center; padding:4px 0;
-        }}
+        .exam-subject-line {{ display:none; }}
     }}
+    /* מיכל עמוד */
     .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
     @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
-    div[data-testid="stButton"] button[kind="secondary"] {{ min-width:42px; white-space:nowrap; }}
-
-    /* כפתורי מפת שאלות — רוחב מינימלי למספרים דו-ספרתיים */
-    div[data-testid="stHorizontalBlock"] button[kind="secondary"] {{
-        min-width: 44px !important;
-        white-space: nowrap !important;
+    /* כפתורי מפת שאלות */
+    div[data-testid="stHorizontalBlock"] button {{
+        min-width:44px !important; white-space:nowrap !important;
     }}
     </style>
     <div class="exam-fixed">
         <div class="exam-subject-line">בחינה: {subject}</div>
-        <div class="exam-clock-sticky">
-            <span id="exam-clock-display" class="exam-clock-val">--:--</span>
-        </div>
+        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
     </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
@@ -161,7 +152,7 @@ def render_exam_progress(logo_tag):
 
         has_answer = st.session_state.exam_answers[current] is not None
 
-        nav1, nav2 = st.columns(2)
+        nav1, nav2, nav3, nav4 = st.columns(4)
         with nav1:
             if st.button("הבאה ▶", use_container_width=True, disabled=(current == q_count - 1 or not has_answer or frozen)):
                 st.session_state.exam_current += 1
@@ -171,11 +162,9 @@ def render_exam_progress(logo_tag):
             if st.button("◀ הקודמת", use_container_width=True, disabled=(current == 0 or frozen)):
                 st.session_state.exam_current -= 1
                 st.rerun()
-
-        nav3, nav4 = st.columns(2)
         with nav3:
             can_finish = frozen or st.session_state.exam_answers[q_count - 1] is not None
-            if st.button("סיים בחינה", use_container_width=True, disabled=not can_finish):
+            if st.button("סיים/י", use_container_width=True, disabled=not can_finish):
                 if frozen and not st.session_state.get("exam_timeout_ack"):
                     st.session_state.exam_timeout_ack = True
                     st.rerun()
