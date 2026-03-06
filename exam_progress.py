@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.8
+# exam_progress.py | Version: v5.9
 
 import streamlit as st
 import time
@@ -62,36 +62,61 @@ def render_exam_progress(logo_tag):
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # לוגו + שם משתמש — רגיל, לא קבוע
-    render_top_bar(logo_tag)
-
-    # כותרת בחינה + שעון — static
+    # פריים עליון קבוע — לוגו+שם+כותרת+שעון יחד
+    user_name = st.session_state.get("user_name", "")
     st.markdown(f"""
     <style>
-    .exam-header {{
+    /* מחשב: פריים קבוע אחד */
+    .exam-top-frame {{
         position:sticky; top:0; z-index:999;
-        background:#fff; border-bottom:2px solid #eee;
-        padding:6px 16px; direction:rtl;
-        display:flex !important; flex-direction:row !important; flex-wrap:nowrap;
-        align-items:center; justify-content:center; gap:24px;
-        margin-bottom:8px; width:100%;
+        background:#fff; border-bottom:1px solid #eee;
+        padding:4px 16px 6px 16px; direction:rtl;
+        width:100%;
+    }}
+    .exam-top-row1 {{
+        display:flex; align-items:center; justify-content:space-between;
+        margin-bottom:0;
+    }}
+    .exam-top-row2 {{
+        display:flex; align-items:center; justify-content:center; gap:24px;
+        padding-top:2px;
     }}
     .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.495rem; font-weight:800; letter-spacing:3px; color:#222; }}
+    .exam-logo-wrap img {{ width:100px; height:auto; display:block; }}
+    /* נייד: רק שעון קבוע, שאר גולל */
     @media (max-width:768px) {{
-        .exam-header {{ flex-direction:column; gap:2px; padding:6px 8px; }}
-        .exam-subject-line {{ font-size:1rem; }}
-        .exam-clock-val {{ font-size:1.15rem; }}
+        .exam-top-frame {{ position:static; border:none; padding:4px 8px; }}
+        .exam-top-row2 {{ display:none; }}
+        .exam-clock-mobile {{
+            position:sticky; top:0; z-index:999;
+            background:#fff; border-bottom:1px solid #eee;
+            text-align:center; padding:5px 0;
+        }}
     }}
+    @media (min-width:769px) {{ .exam-clock-mobile {{ display:none; }} }}
     .exam-wrap {{ max-width:80%; margin:0 auto; padding:0 16px; }}
     @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
     div[data-testid="stHorizontalBlock"] button {{
         min-width:44px !important; white-space:nowrap !important;
     }}
     </style>
-    <div class="exam-header">
-        <div class="exam-subject-line">בחינה: {subject}</div>
-        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
+    <div class="exam-top-frame">
+        <div class="exam-top-row1">
+            <div style="display:flex;align-items:center;gap:6px;margin-right:8px;">
+                <span style="font-size:0.9rem;font-weight:600;">{user_name}</span>
+                <span style="font-size:1.2rem;">👤</span>
+            </div>
+            <div class="exam-logo-wrap">{logo_tag}</div>
+        </div>
+        <div class="exam-top-row2">
+            <div class="exam-subject-line">בחינה: {subject}</div>
+            <span id="exam-clock-display" class="exam-clock-val">--:--</span>
+        </div>
+    </div>
+    <!-- נייד: שעון sticky בנפרד -->
+    <div class="exam-clock-mobile">
+        <span id="exam-clock-display-mobile" class="exam-clock-val">--:--</span>
     </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
@@ -110,6 +135,8 @@ def render_exam_progress(logo_tag):
         try {{
             var el = window.parent.document.getElementById('exam-clock-display');
             if (el) {{ el.innerHTML = str; el.style.color = color; }}
+            var el2 = window.parent.document.getElementById('exam-clock-display-mobile');
+            if (el2) {{ el2.innerHTML = str; el2.style.color = color; }}
         }} catch(e) {{}}
         if (s > 0) setTimeout(updateClock, 1000);
     }}
