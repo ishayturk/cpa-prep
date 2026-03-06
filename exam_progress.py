@@ -1,23 +1,48 @@
-# exam_progress.py | Version: v4.2
+# exam_progress.py | Version: v4.4
 
 import streamlit as st
 import time
+import json
+import os
 import streamlit.components.v1 as components
-from utils import render_top_bar
+from utils import render_top_bar, EXAM_FILES, EXAMS_DIR
 
-EXAM_QUESTIONS = 5
-EXAM_SECONDS = 1 * 60  # דקה לניסיון
+EXAM_QUESTIONS = 40
+EXAM_SECONDS = 120 * 60  # 120 דקות
+
+
+@st.cache_data
+def load_exam(subject):
+    """טוען בחינה לפי נושא מקובץ JSON"""
+    files = EXAM_FILES.get(subject, [])
+    if not files:
+        return None
+    path = os.path.join(EXAMS_DIR, files[0])
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
 
 
 def render_exam_progress(logo_tag):
     subject = st.session_state.get("exam_subject", "")
     user_name = st.session_state.get("user_name", "")
 
+    # טעינת בחינה מ-JSON
+    exam_data = load_exam(subject)
+    if exam_data:
+        questions = exam_data.get("questions", {})
+        q_count = len(questions)
+    else:
+        questions = {}
+        q_count = EXAM_QUESTIONS
+
     # אתחול state
     if "exam_start_time" not in st.session_state:
         st.session_state.exam_start_time = time.time()
-        st.session_state.exam_answers = [None] * EXAM_QUESTIONS
-        st.session_state.exam_visited = [False] * EXAM_QUESTIONS
+        st.session_state.exam_answers = [None] * q_count
+        st.session_state.exam_visited = [False] * q_count
         st.session_state.exam_visited[0] = True
         st.session_state.exam_current = 0
         st.session_state.exam_frozen = False
@@ -100,25 +125,34 @@ def render_exam_progress(logo_tag):
     with col_q:
         q_num = current + 1
         st.markdown(f"**שאלה {q_num}**")
-        st.markdown(f"_[כאן תופיע השאלה עבור נושא: {subject}]_")
+
+        # טעינת שאלה מ-JSON
+        q_data = questions.get(str(q_num), {}) if questions else {}
+        if q_data:
+            st.markdown(q_data.get("text", ""))
+            opts_dict = q_data.get("options", {})
+            options_list = [f"{k}. {v}" for k, v in opts_dict.items()]
+        else:
+            st.markdown(f"_[כאן תופיע השאלה עבור נושא: {subject}]_")
+            options_list = ["א. תשובה ראשונה", "ב. תשובה שנייה", "ג. תשובה שלישית", "ד. תשובה רביעית"]
 
         answer = st.radio(
             "בחר תשובה:",
-            options=["א. תשובה ראשונה", "ב. תשובה שנייה", "ג. תשובה שלישית", "ד. תשובה רביעית"],
+            options=options_list,
             key=f"exam_radio_{current}",
             index=st.session_state.exam_answers[current],
             label_visibility="collapsed",
             disabled=frozen,
         )
         if answer is not None and not frozen:
-            idx = ["א. תשובה ראשונה", "ב. תשובה שנייה", "ג. תשובה שלישית", "ד. תשובה רביעית"].index(answer)
+            idx = options_list.index(answer)
             st.session_state.exam_answers[current] = idx
 
         has_answer = st.session_state.exam_answers[current] is not None
 
         nav1, nav2, nav3, nav4 = st.columns(4)
         with nav1:
-            if st.button("הבאה ▶", disabled=(current == EXAM_QUESTIONS - 1 or not has_answer or frozen)):
+            if st.button("הבאה ▶", disabled=(current == q_count - 1 or not has_answer or frozen)):
                 st.session_state.exam_current += 1
                 st.session_state.exam_visited[st.session_state.exam_current] = True
                 st.rerun()
@@ -148,11 +182,11 @@ def render_exam_progress(logo_tag):
     with col_map:
         st.markdown("**מפת שאלות**")
         visited = st.session_state.exam_visited
-        for row in range(0, EXAM_QUESTIONS, 5):
+        for row in range(0, q_count, 5):
             cols = st.columns(5)
             for i, col in enumerate(cols):
                 q_idx = row + i
-                if q_idx < EXAM_QUESTIONS:
+                if q_idx < q_count:
                     with col:
                         is_active = visited[q_idx]
                         if st.button(str(q_idx + 1), key=f"map_{q_idx}", disabled=not is_active):
