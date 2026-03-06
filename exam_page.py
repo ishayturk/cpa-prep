@@ -1,194 +1,220 @@
-# exam_page.py | Version: v1.1
+# exam_progress.py | Version: v5.8
 
 import streamlit as st
-from utils import render_top_bar
-
-EXAM_SUBJECTS = [
-    "תמחור וחשבונאות ניהולית מתקדמת",
-    "טכנולוגיות מידע",
-    "משפט עסקי",
-    "דיני מיסים א'",
-    "דיני מיסים ב'",
-    "חשבונאות פיננסית א'",
-    "דיני תאגידים ומסחר",
-    "סטטיסטיקה",
-    "מימון",
-    "ביקורת חשבונות ובעיות ביקורת מורכבות",
-    "חשבונאות פיננסית מתקדמת",
-    "כלכלה",
-    "מבוא לחשבונאות",
-    "יסודות ביקורת החשבונות",
-]
+import time
+import json
+import os
+import streamlit.components.v1 as components
+from utils import render_top_bar, EXAM_FILES, EXAMS_DIR
 
 EXAM_QUESTIONS = 40
-EXAM_MINUTES = 120
+EXAM_SECONDS = 120 * 60  # 120 דקות
 
 
-def render_exam_topic(logo_tag):
-    st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    render_top_bar(logo_tag)
-
-    st.markdown("### ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
-    st.markdown("לכניסה לבחינה אנא בחר נושא:")
-
-    subject_options = ["בחר נושא..."] + EXAM_SUBJECTS
-    selected = st.selectbox("נושא הבחינה", subject_options, label_visibility="collapsed")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("המשך להוראות הבחינה", disabled=(selected == "בחר נושא...")):
-            st.session_state.exam_subject = selected
-            st.session_state.page = "exam_instructions"
-            st.rerun()
-    with col2:
-        if st.button("חזרה לתפריט הראשי", key="exam_topic_home"):
-            st.session_state.page = "welcome"
-            st.rerun()
-
-    st.markdown("</div>", unsafe_allow_html=True)
+def load_exam(subject):
+    """טוען בחינה לפי נושא מקובץ JSON"""
+    files = EXAM_FILES.get(subject, [])
+    if not files:
+        return None
+    path = os.path.join(EXAMS_DIR, files[0])
+    if not os.path.exists(path):
+        st.warning(f"קובץ לא נמצא: {path}")
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        st.error(f"שגיאה בטעינת בחינה: {e}")
+        return None
 
 
-def render_exam_instructions(logo_tag):
-    st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    render_top_bar(logo_tag)
-
+def render_exam_progress(logo_tag):
     subject = st.session_state.get("exam_subject", "")
-    st.markdown(f"### הוראות בחינה — {subject}")
-
-    st.markdown(f"""
-**מבנה הבחינה:**
-- מספר שאלות: {EXAM_QUESTIONS}
-- זמן הבחינה: {EXAM_MINUTES} דקות
-- כל שאלה כוללת 4 תשובות אפשריות, רק אחת נכונה
-
-**ניווט בבחינה:**
-- ניתן לעבור בין שאלות בחופשיות
-- ניתן לסמן שאלה לחזרה מאוחרת
-- ניתן לשנות תשובה בכל שלב לפני הגשה
-
-**סיום הבחינה:**
-- ניתן להגיש בכל עת לפני פקיעת הזמן
-- בסיום הזמן הבחינה תוגש אוטומטית
-
-**משוב וציון:**
-- לאחר ההגשה יוצג ציון מיידי
-- ניתן לעיין בכל שאלה עם הסבר לתשובה הנכונה
-- ציון עובר: 60 ומעלה
-""")
-
-    st.markdown("---")
-    confirmed = st.checkbox("קראתי והבנתי את הוראות הבחינה")
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("התחל/י בחינה", disabled=not confirmed):
-            st.session_state.page = "exam_progress"
-            st.rerun()
-
-    with col2:
-        if st.button("חזרה לבחירת נושא"):
-            st.session_state.page = "exam_topic"
-            st.rerun()
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# סוף קובץ
-
-
-def render_exam_feedback(logo_tag):
-    # exam_page.py | render_exam_feedback | Version: v2.0
-    import math
-    import json, os
-    from utils import render_top_bar, EXAM_FILES, EXAMS_DIR
-
-    st.markdown('<div class="wrap">', unsafe_allow_html=True)
-    render_top_bar(logo_tag)
-
-    subject = st.session_state.get("exam_subject", "")
-    answers = st.session_state.get("exam_answers", [])
-    total = len(answers)
+    user_name = st.session_state.get("user_name", "")
 
     # טעינת בחינה מ-JSON
-    exam_data = None
-    files = EXAM_FILES.get(subject, [])
-    if files:
-        path = os.path.join(EXAMS_DIR, files[0])
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                exam_data = json.load(f)
-        except Exception:
-            pass
+    exam_data = load_exam(subject)
+    if exam_data:
+        questions = exam_data.get("questions", {})
+        q_count = len(questions)
+    else:
+        questions = {}
+        q_count = EXAM_QUESTIONS
 
-    questions = exam_data.get("questions", {}) if exam_data else {}
+    # אתחול state
+    if "exam_start_time" not in st.session_state:
+        st.session_state.exam_start_time = time.time()
+        st.session_state.exam_answers = [None] * q_count
+        st.session_state.exam_visited = [False] * q_count
+        st.session_state.exam_visited[0] = True
+        st.session_state.exam_current = 0
+        st.session_state.exam_frozen = False
+        st.session_state.exam_finished = False
 
-    # חישוב ציון
-    correct_count = 0
-    answered_count = 0
-    for i, a in enumerate(answers):
-        if a is None:
-            continue
-        answered_count += 1
-        q_data = questions.get(str(i + 1), {})
-        if not q_data:
-            continue
-        opts = list(q_data.get("options", {}).keys())
-        correct_label = q_data.get("correct_label", "")
-        if opts and a < len(opts) and opts[a] == correct_label:
-            correct_count += 1
+    elapsed = time.time() - st.session_state.exam_start_time
+    remaining = max(0, EXAM_SECONDS - int(elapsed))
 
-    score = round(100 * correct_count / total) if total > 0 else 0
+    # הקפאה בלחיצה הבאה כשנגמר הזמן
+    if remaining == 0 and not st.session_state.exam_frozen:
+        st.session_state.exam_frozen = True
 
-    # כותרת
-    st.markdown(f"### {subject}")
-    st.markdown(f"**ציון: {score}** &nbsp;&nbsp; {correct_count} נכון מתוך {answered_count} שאלות שנענו")
-    st.markdown("---")
+    frozen = st.session_state.exam_frozen
+    finished = st.session_state.exam_finished
+    current = st.session_state.exam_current
 
-    # משוב לכל שאלה
-    for i in range(total):
-        a = answers[i]
-        if a is None:
-            st.markdown(f'<div style="color:#888; margin-bottom:4px;">שאלה {i+1}: לא נענתה</div>', unsafe_allow_html=True)
-            continue
+    # לוגו + שם משתמש — רגיל, לא קבוע
+    render_top_bar(logo_tag)
 
-        q_data = questions.get(str(i + 1), {})
-        if not q_data:
-            continue
+    # כותרת בחינה + שעון — static
+    st.markdown(f"""
+    <style>
+    .exam-header {{
+        position:sticky; top:0; z-index:999;
+        background:#fff; border-bottom:2px solid #eee;
+        padding:6px 16px; direction:rtl;
+        display:flex !important; flex-direction:row !important; flex-wrap:nowrap;
+        align-items:center; justify-content:center; gap:24px;
+        margin-bottom:8px; width:100%;
+    }}
+    .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; }}
+    .exam-clock-val {{ font-size:1.495rem; font-weight:800; letter-spacing:3px; color:#222; }}
+    @media (max-width:768px) {{
+        .exam-header {{ flex-direction:column; gap:2px; padding:6px 8px; }}
+        .exam-subject-line {{ font-size:1rem; }}
+        .exam-clock-val {{ font-size:1.15rem; }}
+    }}
+    .exam-wrap {{ max-width:80%; margin:0 auto; padding:0 16px; }}
+    @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
+    div[data-testid="stHorizontalBlock"] button {{
+        min-width:44px !important; white-space:nowrap !important;
+    }}
+    </style>
+    <div class="exam-header">
+        <div class="exam-subject-line">בחינה: {subject}</div>
+        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
+    </div>
+    <div class="exam-wrap">
+    """, unsafe_allow_html=True)
 
-        opts_dict = q_data.get("options", {})
-        opts_keys = list(opts_dict.keys())
-        correct_label = q_data.get("correct_label", "")
-        explanation = q_data.get("explanation", "")
+    # טיימר JavaScript — מעדכן רק את הספרות
+    timer_js = f"""
+    <style>body{{margin:0;padding:0;overflow:hidden;}}</style>
+    <script>
+    var deadline = Date.now() + {remaining} * 1000;
+    function updateClock() {{
+        var s = Math.round((deadline - Date.now()) / 1000);
+        if (s < 0) s = 0;
+        var m = Math.floor(s / 60); var sec = s % 60;
+        var str = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+        var color = (s <= 60) ? '#dc3545' : '#222';
+        try {{
+            var el = window.parent.document.getElementById('exam-clock-display');
+            if (el) {{ el.innerHTML = str; el.style.color = color; }}
+        }} catch(e) {{}}
+        if (s > 0) setTimeout(updateClock, 1000);
+    }}
+    updateClock();
+    </script>
+    """
+    components.html(timer_js, height=0)
 
-        user_label = opts_keys[a] if a < len(opts_keys) else "?"
-        user_text = opts_dict.get(user_label, "")
-        correct_text = opts_dict.get(correct_label, "")
+    # הודעת תום זמן
+    if frozen and not finished:
+        st.error("⏰ זמן הבחינה הסתיים — לחץ/י על **סיים בחינה** להגשה")
 
-        if user_label == correct_label:
-            st.markdown(f'<div style="background:#d4edda; padding:8px 12px; border-radius:6px; margin-bottom:6px;">'
-                        f'<b>שאלה {i+1}: ✓ נכון</b></div>', unsafe_allow_html=True)
+    col_q, col_map = st.columns([2, 1])
+
+    with col_q:
+        q_num = current + 1
+        st.markdown(f"**שאלה {q_num}**")
+
+        # טעינת שאלה מ-JSON
+        q_data = questions.get(str(q_num), {}) if questions else {}
+        if q_data:
+            st.markdown(q_data.get("text", ""))
+            opts_dict = q_data.get("options", {})
+            options_list = [f"{k}. {v}" for k, v in opts_dict.items()]
         else:
-            st.markdown(
-                f'<div style="background:#f8d7da; padding:8px 12px; border-radius:6px 6px 0 0; margin-bottom:1px;">'
-                f'<b>שאלה {i+1}: ✗ טעית</b> — ענית: {user_label}. {user_text}</div>',
-                unsafe_allow_html=True)
-            st.markdown(
-                f'<div style="background:#fff3cd; padding:8px 12px; border-radius:0 0 6px 6px; margin-bottom:1px;">'
-                f'תשובה נכונה: {correct_label}. {correct_text}</div>',
-                unsafe_allow_html=True)
+            st.markdown(f"_[כאן תופיע השאלה עבור נושא: {subject}]_")
+            options_list = ["א. תשובה ראשונה", "ב. תשובה שנייה", "ג. תשובה שלישית", "ד. תשובה רביעית"]
 
-        if explanation:
-            st.markdown(
-                f'<div style="background:#f0f4ff; padding:6px 12px; border-radius:0 0 6px 6px; '
-                f'font-size:0.88rem; color:#444; margin-bottom:8px;">{explanation}</div>',
-                unsafe_allow_html=True)
+        answer = st.radio(
+            "בחר תשובה:",
+            options=options_list,
+            key=f"exam_radio_{current}",
+            index=st.session_state.exam_answers[current],
+            label_visibility="collapsed",
+            disabled=frozen,
+        )
+        if answer is not None and not frozen:
+            idx = options_list.index(answer)
+            st.session_state.exam_answers[current] = idx
 
-    st.markdown("---")
-    if st.button("חזרה לתפריט הראשי"):
-        for k in ["exam_start_time", "exam_answers", "exam_visited",
-                  "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
-            st.session_state.pop(k, None)
-        st.query_params.clear()
-        st.session_state.page = "welcome"
-        st.rerun()
+        has_answer = st.session_state.exam_answers[current] is not None
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        nav1, nav2, nav3, nav4 = st.columns(4)
+        with nav1:
+            if st.button("הבאה ▶", disabled=(current == q_count - 1 or not has_answer or frozen)):
+                st.session_state.exam_current += 1
+                st.session_state.exam_visited[st.session_state.exam_current] = True
+                st.rerun()
+        with nav2:
+            if st.button("◀ הקודמת", disabled=(current == 0 or frozen)):
+                st.session_state.exam_current -= 1
+                st.rerun()
+        with nav3:
+            can_finish = frozen or st.session_state.exam_answers[q_count - 1] is not None
+            if st.button("סיים/י", disabled=not can_finish):
+                if frozen and not st.session_state.get("exam_timeout_ack"):
+                    st.session_state.exam_timeout_ack = True
+                    st.rerun()
+                else:
+                    st.session_state.exam_finished = True
+                    st.session_state.page = "exam_feedback"
+                    st.rerun()
+        with nav4:
+            if st.button("תפריט ראשי", key="exam_home"):
+                for k in ["exam_start_time", "exam_answers", "exam_visited",
+                          "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
+                    st.session_state.pop(k, None)
+                st.query_params.clear()
+                st.session_state.page = "welcome"
+                st.rerun()
+
+    with col_map:
+        st.markdown("**מפת שאלות**")
+        visited = st.session_state.exam_visited
+        for row in range(0, q_count, 5):
+            cols = st.columns(5)
+            for i, col in enumerate(cols):
+                q_idx = row + i
+                if q_idx < q_count:
+                    with col:
+                        is_active = visited[q_idx]
+                        if st.button(str(q_idx + 1), key=f"map_{q_idx}", disabled=not is_active):
+                            st.session_state.exam_current = q_idx
+                            st.rerun()
+
+    st.markdown("</div></div>", unsafe_allow_html=True)
+
+    # כפתור גלילה לראש העמוד — רק בדף הבחינה
+    st.markdown("""
+    <style>
+    .scroll-top-btn {
+        position: fixed; bottom: 32px; left: 150px; z-index: 9999;
+        width: 46px; height: 46px; border-radius: 50%;
+        background: rgba(170,170,170,0.85); color: #fff;
+        border: none; cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25); text-decoration: none;
+    }
+    .scroll-top-btn:hover { background: rgba(130,130,130,0.95); }
+    </style>
+    <a class="scroll-top-btn" href="#top">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </a>
+    """, unsafe_allow_html=True)
+
+# סוף קובץ
