@@ -1,4 +1,4 @@
-# utils.py | Version: v2.0
+# utils.py | Version: v2.1
 
 import streamlit as st
 import resend
@@ -219,7 +219,7 @@ def inject_css():
 .scroll-top-btn {
     position: fixed;
     bottom: 32px;
-    left: 60px;
+    left: 150px;
     z-index: 9999;
     width: 46px;
     height: 46px;
