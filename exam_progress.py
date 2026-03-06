@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v4.5
+# exam_progress.py | Version: v4.6
 
 import streamlit as st
 import time
@@ -17,7 +17,6 @@ def load_exam(subject):
     if not files:
         return None
     path = os.path.join(EXAMS_DIR, files[0])
-    st.caption(f"🔍 מחפש: `{path}`")  # DEBUG — להסיר אחרי בדיקה
     if not os.path.exists(path):
         st.warning(f"קובץ לא נמצא: {path}")
         return None
@@ -66,20 +65,31 @@ def render_exam_progress(logo_tag):
     # לוגו + שם משתמש — רגיל, לא קבוע
     render_top_bar(logo_tag)
 
-    # פריים קבוע — כותרת בחינה + שעון (במחשב), שעון בלבד (בנייד)
+    # פריים קבוע — כותרת בחינה + שעון (במחשב), שורות נפרדות + sticky שעון (בנייד)
     st.markdown(f"""
     <style>
-    /* כותרת קבועה */
+    /* מחשב: כותרת + שעון באותה שורה, sticky */
     .exam-fixed {{
         position:sticky; top:0; z-index:999;
         background:#fff; border-bottom:2px solid #eee;
-        padding:4px 0; direction:rtl;
+        padding:6px 0; direction:rtl;
         display:flex; align-items:center; justify-content:center; gap:24px;
     }}
     .exam-subject-line {{ font-size:1.4rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.4rem; font-weight:800; letter-spacing:3px; color:#222; }}
+    /* נייד: כותרת רגילה, שעון sticky בנפרד */
     @media (max-width:768px) {{
-        .exam-subject-line {{ display:none; }}
+        .exam-fixed {{ position:static; border-bottom:none; padding:4px 0; flex-direction:column; gap:2px; }}
+        .exam-subject-line {{ font-size:1rem; }}
+        .exam-clock-sticky-mobile {{
+            position:sticky; top:0; z-index:999;
+            background:#fff; border-bottom:2px solid #eee;
+            text-align:center; padding:4px 0;
+        }}
+        .exam-clock-desktop {{ display:none; }}
+    }}
+    @media (min-width:769px) {{
+        .exam-clock-sticky-mobile {{ display:none; }}
     }}
     /* מיכל עמוד */
     .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
@@ -91,7 +101,10 @@ def render_exam_progress(logo_tag):
     </style>
     <div class="exam-fixed">
         <div class="exam-subject-line">בחינה: {subject}</div>
-        <span id="exam-clock-display" class="exam-clock-val">--:--</span>
+        <span id="exam-clock-display" class="exam-clock-val exam-clock-desktop">--:--</span>
+    </div>
+    <div class="exam-clock-sticky-mobile">
+        <span id="exam-clock-display-mobile" class="exam-clock-val">--:--</span>
     </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
@@ -110,6 +123,8 @@ def render_exam_progress(logo_tag):
         try {{
             var el = window.parent.document.getElementById('exam-clock-display');
             if (el) {{ el.innerHTML = str; el.style.color = color; }}
+            var el2 = window.parent.document.getElementById('exam-clock-display-mobile');
+            if (el2) {{ el2.innerHTML = str; el2.style.color = color; }}
         }} catch(e) {{}}
         if (s > 0) setTimeout(updateClock, 1000);
     }}
