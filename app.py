@@ -1,4 +1,4 @@
-# File: app.py | Version: CPA72
+# File: app.py | Version: CPA73
 
 import streamlit as st
 from PIL import Image
@@ -42,6 +42,15 @@ if not st.session_state.logged_in:
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
+    # --- BACKDOOR --- הסר לפני פרודקשן
+    _bd_name = "ישי טורק"
+    _bd_email = "ishayturk@gmail.com"
+    if st.session_state.get("login_name", "") == _bd_name and st.session_state.get("login_email", "") == _bd_email:
+        st.session_state.logged_in = True
+        st.session_state.user_name = _bd_name
+        st.session_state.page = "welcome"
+        st.rerun()
+    # --- סוף BACKDOOR ---
     if not st.session_state.get("otp_sent", False):
         for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
             if k in st.session_state:
