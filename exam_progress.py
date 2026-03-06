@@ -11,17 +11,21 @@ EXAM_QUESTIONS = 40
 EXAM_SECONDS = 120 * 60  # 120 דקות
 
 
-@st.cache_data
 def load_exam(subject):
     """טוען בחינה לפי נושא מקובץ JSON"""
     files = EXAM_FILES.get(subject, [])
     if not files:
         return None
     path = os.path.join(EXAMS_DIR, files[0])
+    st.caption(f"🔍 מחפש: `{path}`")  # DEBUG — להסיר אחרי בדיקה
+    if not os.path.exists(path):
+        st.warning(f"קובץ לא נמצא: {path}")
+        return None
     try:
         with open(path, "r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
+    except Exception as e:
+        st.error(f"שגיאה בטעינת בחינה: {e}")
         return None
 
 
@@ -82,8 +86,15 @@ def render_exam_progress(logo_tag):
             text-align:center; padding:4px 0;
         }}
     }}
-    .exam-wrap {{ max-width:75vw; margin:0 auto; padding:0 16px; }}
+    .exam-wrap {{ max-width:80vw; margin:0 auto; padding:0 16px; }}
     @media (max-width:768px) {{ .exam-wrap {{ max-width:100%; }} }}
+    div[data-testid="stButton"] button[kind="secondary"] {{ min-width:42px; white-space:nowrap; }}
+
+    /* כפתורי מפת שאלות — רוחב מינימלי למספרים דו-ספרתיים */
+    div[data-testid="stHorizontalBlock"] button[kind="secondary"] {{
+        min-width: 44px !important;
+        white-space: nowrap !important;
+    }}
     </style>
     <div class="exam-fixed">
         <div class="exam-subject-line">בחינה: {subject}</div>
@@ -150,19 +161,21 @@ def render_exam_progress(logo_tag):
 
         has_answer = st.session_state.exam_answers[current] is not None
 
-        nav1, nav2, nav3, nav4 = st.columns(4)
+        nav1, nav2 = st.columns(2)
         with nav1:
-            if st.button("הבאה ▶", disabled=(current == q_count - 1 or not has_answer or frozen)):
+            if st.button("הבאה ▶", use_container_width=True, disabled=(current == q_count - 1 or not has_answer or frozen)):
                 st.session_state.exam_current += 1
                 st.session_state.exam_visited[st.session_state.exam_current] = True
                 st.rerun()
         with nav2:
-            if st.button("◀ הקודמת", disabled=(current == 0 or frozen)):
+            if st.button("◀ הקודמת", use_container_width=True, disabled=(current == 0 or frozen)):
                 st.session_state.exam_current -= 1
                 st.rerun()
+
+        nav3, nav4 = st.columns(2)
         with nav3:
-            can_finish = frozen or st.session_state.exam_answers[EXAM_QUESTIONS - 1] is not None
-            if st.button("סיים בחינה", disabled=not can_finish):
+            can_finish = frozen or st.session_state.exam_answers[q_count - 1] is not None
+            if st.button("סיים בחינה", use_container_width=True, disabled=not can_finish):
                 if frozen and not st.session_state.get("exam_timeout_ack"):
                     st.session_state.exam_timeout_ack = True
                     st.rerun()
@@ -171,7 +184,7 @@ def render_exam_progress(logo_tag):
                     st.session_state.page = "exam_feedback"
                     st.rerun()
         with nav4:
-            if st.button("תפריט ראשי", key="exam_home"):
+            if st.button("תפריט ראשי", use_container_width=True, key="exam_home"):
                 for k in ["exam_start_time", "exam_answers", "exam_visited",
                           "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
                     st.session_state.pop(k, None)
