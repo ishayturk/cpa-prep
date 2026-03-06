@@ -1,4 +1,4 @@
-# utils.py | Version: v1.8
+# utils.py | Version: v1.9
 
 import streamlit as st
 import resend
@@ -215,46 +215,31 @@ def inject_css():
     .mobile-only  { display: block; }
   }
 </style>
+<style>
+.scroll-top-btn {
+    position: fixed;
+    bottom: 32px;
+    left: 24px;
+    z-index: 9999;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(170,170,170,0.85);
+    color: #fff;
+    font-size: 1.5rem;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    text-decoration: none;
+    line-height: 1;
+}
+.scroll-top-btn:hover { background: rgba(130,130,130,0.95); }
+</style>
+<a class="scroll-top-btn" href="#top">↑</a>
 """, unsafe_allow_html=True)
-
-    # כפתור צף לראש העמוד
-    import streamlit.components.v1 as components
-    components.html("""
-    <style>
-    #scroll-top-btn {
-        display: none;
-        position: fixed;
-        bottom: 32px;
-        left: 24px;
-        z-index: 9999;
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        background: #aaa;
-        color: #fff;
-        font-size: 1.5rem;
-        border: none;
-        cursor: pointer;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-        opacity: 0.85;
-        line-height: 1;
-    }
-    #scroll-top-btn:hover { background: #888; opacity: 1; }
-    </style>
-    <button id="scroll-top-btn" onclick="window.parent.scrollTo({top:0,behavior:'smooth'})">↑</button>
-    <script>
-    function checkScroll() {
-        var btn = document.getElementById('scroll-top-btn');
-        if (!btn) return;
-        var scrollY = window.parent.scrollY || window.parent.pageYOffset || 0;
-        btn.style.display = scrollY > 150 ? 'flex' : 'none';
-    }
-    window.parent.addEventListener('scroll', checkScroll);
-    checkScroll();
-    </script>
-    """, height=0)
 
 # -------------------------
 # Helpers
