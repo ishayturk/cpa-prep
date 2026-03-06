@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.7
+# exam_progress.py | Version: v5.8
 
 import streamlit as st
 import time
@@ -69,6 +69,7 @@ def render_exam_progress(logo_tag):
     st.markdown(f"""
     <style>
     .exam-header {{
+        position:sticky; top:0; z-index:999;
         background:#fff; border-bottom:2px solid #eee;
         padding:6px 16px; direction:rtl;
         display:flex !important; flex-direction:row !important; flex-wrap:nowrap;
