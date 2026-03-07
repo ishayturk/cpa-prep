@@ -1,7 +1,7 @@
 # exam_page.py | Version: v1.1
 
 import streamlit as st
-from utils import render_top_bar
+from utils import render_top_bar, EXAM_FILES
 
 EXAM_SUBJECTS = [
     "תמחור וחשבונאות ניהולית מתקדמת",
@@ -31,13 +31,24 @@ def render_exam_topic(logo_tag):
     st.markdown("### ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
     st.markdown("לכניסה לבחינה אנא בחר נושא:")
 
-    subject_options = ["בחר נושא..."] + EXAM_SUBJECTS
+    available = [s for s in EXAM_SUBJECTS if s in EXAM_FILES]
+    coming_soon = [s for s in EXAM_SUBJECTS if s not in EXAM_FILES]
+
+    subject_options = ["בחר נושא..."] + available
     selected = st.selectbox("נושא הבחינה", subject_options, label_visibility="collapsed")
+
+    if coming_soon:
+        st.markdown(
+            "<div style='font-size:0.85rem; color:#888; margin-top:8px;'>"
+            "בקרוב: " + " | ".join(coming_soon) + "</div>",
+            unsafe_allow_html=True
+        )
 
     col1, col2 = st.columns(2)
     with col1:
         if st.button("המשך להוראות הבחינה", disabled=(selected == "בחר נושא...")):
             st.session_state.exam_subject = selected
+            st.session_state.exam_file = None  # יבחר אקראי בתחילת הבחינה
             st.session_state.page = "exam_instructions"
             st.rerun()
     with col2:
@@ -108,11 +119,14 @@ def render_exam_feedback(logo_tag):
     answers = st.session_state.get("exam_answers", [])
     total = len(answers)
 
-    # טעינת בחינה מ-JSON
+    # טעינת בחינה מ-JSON — אותו קובץ שנבחר בתחילת הבחינה
     exam_data = None
     files = EXAM_FILES.get(subject, [])
     if files:
-        path = os.path.join(EXAMS_DIR, files[0])
+        chosen = st.session_state.get("exam_file")
+        if not chosen or chosen not in files:
+            chosen = files[0]
+        path = os.path.join(EXAMS_DIR, chosen)
         try:
             with open(path, "r", encoding="utf-8") as f:
                 exam_data = json.load(f)
@@ -184,8 +198,15 @@ def render_exam_feedback(logo_tag):
 
     st.markdown("---")
     if st.button("חזרה לתפריט הראשי"):
+        # שמור איזה קובץ השתמשנו — כדי לא לחזור עליו בפעם הבאה
+        subject = st.session_state.get("exam_subject", "")
+        used_file = st.session_state.get("exam_file")
+        if subject and used_file:
+            if "exam_file_last_used" not in st.session_state:
+                st.session_state.exam_file_last_used = {}
+            st.session_state.exam_file_last_used[subject] = used_file
         for k in ["exam_start_time", "exam_answers", "exam_visited",
-                  "exam_current", "exam_frozen", "exam_finished", "exam_subject"]:
+                  "exam_current", "exam_frozen", "exam_finished", "exam_subject", "exam_file"]:
             st.session_state.pop(k, None)
         st.query_params.clear()
         st.session_state.page = "welcome"
