@@ -1,4 +1,4 @@
-# File: app.py | Version: CPA74
+# File: app.py | Version: CPA75
 
 import streamlit as st
 from PIL import Image
@@ -42,15 +42,6 @@ if not st.session_state.logged_in:
 # LOGIN PAGE
 # -------------------------
 if st.session_state.page == "login":
-    # --- BACKDOOR --- הסר לפני פרודקשן
-    _bd_name = "ישי טורק"
-    _bd_email = "ishayturk@gmail.com"
-    if st.session_state.get("login_name", "") == _bd_name and st.session_state.get("login_email", "") == _bd_email:
-        st.session_state.logged_in = True
-        st.session_state.user_name = _bd_name
-        st.session_state.page = "welcome"
-        st.rerun()
-    # --- סוף BACKDOOR ---
     if not st.session_state.get("otp_sent", False):
         for k in ["otp_code", "otp_time", "otp_attempts", "pending_name", "pending_email"]:
             if k in st.session_state:
@@ -78,6 +69,16 @@ if st.session_state.page == "login":
             if not (valid_name and valid_email):
                 st.warning("יש למלא שם מלא וכתובת מייל תקינה.")
             else:
+                # --- BACKDOOR --- הסר לפני פרודקשן
+                _bd_name = "ישי טורק"
+                _bd_email = "ishayturk@gmail.com"
+                if name == _bd_name and email == _bd_email:
+                    st.session_state.logged_in = True
+                    st.session_state.user_name = name
+                    st.session_state.page = "welcome"
+                    st.rerun()
+                # --- סוף BACKDOOR ---
+
                 code = str(random.randint(100000, 999999))
                 if send_otp_email(email, code):
                     st.session_state.otp_sent = True
