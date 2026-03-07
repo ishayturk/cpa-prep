@@ -278,7 +278,9 @@ def send_otp_email(to_email: str, code: str) -> bool:
 
         return True
     except Exception as e:
+        import traceback
         st.error(f"שגיאת מייל: {e}")
+        st.code(traceback.format_exc())
         return False
 
 def clear_login_inputs_only():
