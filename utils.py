@@ -1,7 +1,9 @@
-# utils.py | Version: v2.5
+# utils.py | Version: v2.6
 
 import streamlit as st
-import resend
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import base64
 
 # -------------------------
@@ -239,10 +241,8 @@ def inject_css():
 # -------------------------
 def clean_lesson(txt):
     lines = txt.split("\n")
-    # הסר שורות ריקות וכותרות markdown בהתחלה
     while lines and (lines[0].strip() == "" or lines[0].strip().startswith("#")):
         lines.pop(0)
-    # הסר שורה ראשונה אם היא נראית ככותרת (bold קצרה ללא סימני פיסוק בסוף)
     if lines:
         first = lines[0].strip()
         is_bold_title = first.startswith("**") and first.endswith("**") and len(first) < 120
@@ -255,13 +255,27 @@ def clean_lesson(txt):
 
 def send_otp_email(to_email: str, code: str) -> bool:
     try:
-        resend.api_key = st.secrets["RESEND_API_KEY"]
-        resend.Emails.send({
-            "from": "onboarding@resend.dev",
-            "to": to_email,
-            "subject": "קוד כניסה - רואה חשבון בקליק",
-            "html": f"<p>קוד הכניסה שלך לרואה חשבון בקליק: <strong>{code}</strong></p><p>הקוד תקף ל-2 דקות.</p>"
-        })
+        gmail_user = st.secrets["GMAIL_USER"]
+        gmail_pass = st.secrets["GMAIL_PASS"]
+
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "קוד כניסה - רואה חשבון בקליק"
+        msg["From"] = gmail_user
+        msg["To"] = to_email
+
+        html = f"""
+        <div dir="rtl" style="font-family: Arial, sans-serif; font-size: 16px;">
+            <p>קוד הכניסה שלך לרואה חשבון בקליק:</p>
+            <h2 style="letter-spacing: 4px;">{code}</h2>
+            <p style="color: #666;">הקוד תקף ל-2 דקות.</p>
+        </div>
+        """
+        msg.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(gmail_user, gmail_pass)
+            server.sendmail(gmail_user, to_email, msg.as_string())
+
         return True
     except Exception:
         return False
