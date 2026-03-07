@@ -277,7 +277,8 @@ def send_otp_email(to_email: str, code: str) -> bool:
             server.sendmail(gmail_user, to_email, msg.as_string())
 
         return True
-    except Exception:
+    except Exception as e:
+        st.error(f"שגיאת מייל: {e}")
         return False
 
 def clear_login_inputs_only():
