@@ -1,4 +1,4 @@
-# exam_page.py | Version: v1.1
+# exam_page.py | Version: v1.2
 
 import streamlit as st
 from utils import render_top_bar, EXAM_FILES
@@ -28,33 +28,22 @@ def render_exam_topic(logo_tag):
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     render_top_bar(logo_tag)
 
-    st.markdown("### ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
+    user_name = st.session_state.get("user_name", "")
+    st.markdown(f"### שלום {user_name}, ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
     st.markdown("לכניסה לבחינה אנא בחר נושא:")
 
-    available = [s for s in EXAM_SUBJECTS if s in EXAM_FILES]
-    coming_soon = [s for s in EXAM_SUBJECTS if s not in EXAM_FILES]
-
-    subject_options = ["בחר נושא..."] + available
+    subject_options = ["בחר נושא..."] + EXAM_SUBJECTS
     selected = st.selectbox("נושא הבחינה", subject_options, label_visibility="collapsed")
 
-    if coming_soon:
-        st.markdown(
-            "<div style='font-size:0.85rem; color:#888; margin-top:8px;'>"
-            "בקרוב: " + " | ".join(coming_soon) + "</div>",
-            unsafe_allow_html=True
-        )
-
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("המשך להוראות הבחינה", disabled=(selected == "בחר נושא...")):
+    if selected != "בחר נושא...":
+        if st.button("המשך להוראות הבחינה"):
             st.session_state.exam_subject = selected
             st.session_state.exam_file = None  # יבחר אקראי בתחילת הבחינה
             st.session_state.page = "exam_instructions"
             st.rerun()
-    with col2:
-        if st.button("חזרה לתפריט הראשי", key="exam_topic_home"):
-            st.session_state.page = "welcome"
-            st.rerun()
+    if st.button("חזרה לתפריט הראשי", key="exam_topic_home"):
+        st.session_state.page = "welcome"
+        st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
