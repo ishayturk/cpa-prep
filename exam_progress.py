@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.9
+# exam_progress.py | Version: v5.11
 
 import streamlit as st
 import time
@@ -41,7 +41,11 @@ def render_exam_progress(logo_tag):
     # טעינת בחינה מ-JSON
     exam_data = load_exam(subject)
     if exam_data:
-        questions = exam_data.get("questions", {})
+        raw_questions = exam_data.get("questions", [])
+        if isinstance(raw_questions, list):
+            questions = {str(i + 1): q for i, q in enumerate(raw_questions)}
+        else:
+            questions = raw_questions
         q_count = len(questions)
     else:
         questions = {}
