@@ -1,4 +1,4 @@
-# exam_page.py | Version: v1.2
+# exam_page.py | Version: v1.3
 
 import streamlit as st
 from utils import render_top_bar, EXAM_FILES
@@ -29,21 +29,23 @@ def render_exam_topic(logo_tag):
     render_top_bar(logo_tag)
 
     user_name = st.session_state.get("user_name", "")
-    st.markdown(f"#### שלום {user_name}, ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
+    st.markdown(f"### שלום {user_name}, ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
     st.markdown("לכניסה לבחינה אנא בחר נושא:")
 
     subject_options = ["בחר נושא..."] + EXAM_SUBJECTS
     selected = st.selectbox("נושא הבחינה", subject_options, label_visibility="collapsed")
 
-    if selected != "בחר נושא...":
-        if st.button("המשך להוראות הבחינה"):
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("המשך להוראות הבחינה", disabled=(selected == "בחר נושא...")):
             st.session_state.exam_subject = selected
             st.session_state.exam_file = None  # יבחר אקראי בתחילת הבחינה
             st.session_state.page = "exam_instructions"
             st.rerun()
-    if st.button("חזרה לתפריט הראשי", key="exam_topic_home"):
-        st.session_state.page = "welcome"
-        st.rerun()
+    with col2:
+        if st.button("חזרה לתפריט הראשי", key="exam_topic_home"):
+            st.session_state.page = "welcome"
+            st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
 
