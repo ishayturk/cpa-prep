@@ -12,11 +12,17 @@ EXAM_SECONDS = 120 * 60  # 120 דקות
 
 
 def load_exam(subject):
-    """טוען בחינה לפי נושא מקובץ JSON"""
+    """טוען בחינה לפי נושא — מסובב בין הקבצים, לא חוזר על האחרון"""
+    import random as _random
     files = EXAM_FILES.get(subject, [])
     if not files:
         return None
-    path = os.path.join(EXAMS_DIR, files[0])
+    # בחר קובץ שאינו האחרון שנעשה
+    if "exam_file" not in st.session_state or st.session_state.get("exam_file") not in files:
+        last = st.session_state.get("exam_file_last_used", {}).get(subject)
+        candidates = [f for f in files if f != last] or files
+        st.session_state.exam_file = _random.choice(candidates)
+    path = os.path.join(EXAMS_DIR, st.session_state.exam_file)
     if not os.path.exists(path):
         st.warning(f"קובץ לא נמצא: {path}")
         return None
