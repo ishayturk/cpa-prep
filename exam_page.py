@@ -29,7 +29,7 @@ def render_exam_topic(logo_tag):
     render_top_bar(logo_tag)
 
     user_name = st.session_state.get("user_name", "")
-    st.markdown(f"### שלום {user_name}, ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
+    st.markdown(f"#### שלום {user_name}, ברוכים הבאים לסימולציית בחינות לשכת רואי החשבון")
     st.markdown("לכניסה לבחינה אנא בחר נושא:")
 
     subject_options = ["בחר נושא..."] + EXAM_SUBJECTS
