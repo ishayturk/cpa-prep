@@ -105,6 +105,7 @@ EXAM_FILES = {
     "טכנולוגיות מידע": ["IT_01.json"],
     "משפט עסקי": ["BLaw_01.json", "BLaw_02.json"],
     "דיני תאגידים ומסחר": ["corporation_01.json"],
+    "תמחור וחשבונאות ניהולית מתקדמת": ["advanced_pricing_01.json"],
 }
 
 import os as _os
