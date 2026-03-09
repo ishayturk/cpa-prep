@@ -1,14 +1,14 @@
-# exam_progress.py | Version: v5.11
+# exam_progress.py | Version: v5.12
 
 import streamlit as st
 import time
 import json
 import os
 import streamlit.components.v1 as components
-from utils import render_top_bar, EXAM_FILES, EXAMS_DIR
+from utils import render_top_bar, EXAM_FILES, EXAMS_DIR, EXAM_OVERRIDES
 
-EXAM_QUESTIONS = 40
-EXAM_SECONDS = 120 * 60  # 120 דקות
+EXAM_QUESTIONS_DEFAULT = 40
+EXAM_MINUTES_DEFAULT = 120
 
 
 def load_exam(subject):
@@ -17,7 +17,6 @@ def load_exam(subject):
     files = EXAM_FILES.get(subject, [])
     if not files:
         return None
-    # בחר קובץ שאינו האחרון שנעשה
     if "exam_file" not in st.session_state or st.session_state.get("exam_file") not in files:
         last = st.session_state.get("exam_file_last_used", {}).get(subject)
         candidates = [f for f in files if f != last] or files
@@ -38,6 +37,10 @@ def render_exam_progress(logo_tag):
     subject = st.session_state.get("exam_subject", "")
     user_name = st.session_state.get("user_name", "")
 
+    # קריאת זמן — דיפולט 120 אם הנושא לא מופיע ב-EXAM_OVERRIDES
+    exam_minutes = EXAM_OVERRIDES.get(subject, {}).get("duration_minutes", EXAM_MINUTES_DEFAULT)
+    exam_seconds = exam_minutes * 60
+
     # טעינת בחינה מ-JSON
     exam_data = load_exam(subject)
     if exam_data:
@@ -49,7 +52,7 @@ def render_exam_progress(logo_tag):
         q_count = len(questions)
     else:
         questions = {}
-        q_count = EXAM_QUESTIONS
+        q_count = EXAM_QUESTIONS_DEFAULT
 
     # אתחול state
     if "exam_start_time" not in st.session_state:
@@ -62,9 +65,8 @@ def render_exam_progress(logo_tag):
         st.session_state.exam_finished = False
 
     elapsed = time.time() - st.session_state.exam_start_time
-    remaining = max(0, EXAM_SECONDS - int(elapsed))
+    remaining = max(0, exam_seconds - int(elapsed))
 
-    # הקפאה בלחיצה הבאה כשנגמר הזמן
     if remaining == 0 and not st.session_state.exam_frozen:
         st.session_state.exam_frozen = True
 
@@ -72,11 +74,9 @@ def render_exam_progress(logo_tag):
     finished = st.session_state.exam_finished
     current = st.session_state.exam_current
 
-    # פריים עליון קבוע — לוגו+שם+כותרת+שעון יחד
     user_name = st.session_state.get("user_name", "")
     st.markdown(f"""
     <style>
-    /* מחשב: פריים קבוע אחד */
     .exam-top-frame {{
         position:sticky; top:0; z-index:999;
         background:#fff; border-bottom:1px solid #eee;
@@ -94,7 +94,6 @@ def render_exam_progress(logo_tag):
     .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.495rem; font-weight:800; letter-spacing:3px; color:#222; }}
     .exam-logo-wrap img {{ width:100px; height:auto; display:block; }}
-    /* נייד: רק שעון קבוע, שאר גולל */
     @media (max-width:768px) {{
         .exam-top-frame {{ position:static; border:none; padding:4px 8px; }}
         .exam-top-row2 {{ display:none; }}
@@ -124,14 +123,13 @@ def render_exam_progress(logo_tag):
             <span id="exam-clock-display" class="exam-clock-val">--:--</span>
         </div>
     </div>
-    <!-- נייד: שעון sticky בנפרד -->
     <div class="exam-clock-mobile">
         <span id="exam-clock-display-mobile" class="exam-clock-val">--:--</span>
     </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
 
-    # טיימר JavaScript — מעדכן רק את הספרות
+    # טיימר JavaScript
     timer_js = f"""
     <style>body{{margin:0;padding:0;overflow:hidden;}}</style>
     <script>
@@ -155,7 +153,6 @@ def render_exam_progress(logo_tag):
     """
     components.html(timer_js, height=0)
 
-    # הודעת תום זמן
     if frozen and not finished:
         st.error("⏰ זמן הבחינה הסתיים — לחץ/י על **סיים בחינה** להגשה")
 
@@ -165,7 +162,6 @@ def render_exam_progress(logo_tag):
         q_num = current + 1
         st.markdown(f"**שאלה {q_num}**")
 
-        # טעינת שאלה מ-JSON
         q_data = questions.get(str(q_num), {}) if questions else {}
         if q_data:
             st.markdown(q_data.get("text", ""))
@@ -234,7 +230,6 @@ def render_exam_progress(logo_tag):
 
     st.markdown("</div></div>", unsafe_allow_html=True)
 
-    # כפתור גלילה לראש העמוד — רק בדף הבחינה
     st.markdown("""
     <style>
     .scroll-top-btn {
