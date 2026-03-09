@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.12
+# exam_progress.py | Version: v5.13
 
 import streamlit as st
 import time
@@ -93,6 +93,12 @@ def render_exam_progress(logo_tag):
     }}
     .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.495rem; font-weight:800; letter-spacing:3px; color:#222; }}
+    .exam-clock-wrap {{ display:flex; flex-direction:column; align-items:center; line-height:1; }}
+    .exam-clock-label {{ font-size:0.65rem; font-weight:500; color:#888; letter-spacing:1px; margin-top:1px; }}
+    @media (max-width:768px) {{
+        .exam-clock-val {{ font-size:1.1rem; }}
+        .exam-clock-label {{ font-size:0.55rem; }}
+    }}
     .exam-logo-wrap img {{ width:100px; height:auto; display:block; }}
     @media (max-width:768px) {{
         .exam-top-frame {{ position:static; border:none; padding:4px 8px; }}
@@ -121,10 +127,17 @@ def render_exam_progress(logo_tag):
         <div class="exam-top-row2">
             <div class="exam-subject-line">בחינה: {subject}</div>
             <span id="exam-clock-display" class="exam-clock-val">--:--</span>
+            <div class="exam-clock-wrap">
+                <span id="exam-clock-display" class="exam-clock-val">--:--</span>
+                <span class="exam-clock-label">דק'</span>
+            </div>
         </div>
     </div>
     <div class="exam-clock-mobile">
-        <span id="exam-clock-display-mobile" class="exam-clock-val">--:--</span>
+        <div class="exam-clock-wrap">
+            <span id="exam-clock-display-mobile" class="exam-clock-val">--:--</span>
+            <span class="exam-clock-label">דק'</span>
+        </div>
     </div>
     <div class="exam-wrap">
     """, unsafe_allow_html=True)
