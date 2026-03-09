@@ -107,6 +107,7 @@ EXAM_FILES = {
     "דיני תאגידים ומסחר": ["corporation_01.json"],
     "תמחור וחשבונאות ניהולית מתקדמת": ["advanced_pricing_01.json"],
     "דיני מסים א'": ["taxes_a_01.json"],
+    "סטטיסטיקה": ["statistics_01.json"],
 }
 
 import os as _os
