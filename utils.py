@@ -109,6 +109,7 @@ EXAM_FILES = {
     "דיני מסים א'": ["taxes_a_01.json"],
     "סטטיסטיקה": ["statistics_01.json"],
     "מבוא לחשבונאות": ["accounting_01.json"],
+    "מימון": ["funding_01.json"],
 }
 
 import os as _os
