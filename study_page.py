@@ -1,4 +1,4 @@
-# study_page.py | Version: v4.3
+# study_page.py | Version: v4.4
 
 import streamlit as st
 import google.generativeai as genai
@@ -17,7 +17,7 @@ def _clear_quiz():
 def _generate_all_questions(topic, sub, lesson_txt, total, subs=None):
     """מייצר את כל השאלות בבת אחת"""
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel("gemini-2.0-flash-lite")
+    model = genai.GenerativeModel("gemini-2.5-flash")
 
     if subs:
         context = f"נושא: {topic}\nתתי נושאים: {', '.join(subs)}\n\nחומר שיעור:\n{lesson_txt[:5000]}"
@@ -106,7 +106,7 @@ def render_study(logo_tag):
             _clear_quiz()
             try:
                 genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-                model = genai.GenerativeModel("gemini-2.0-flash-lite")
+                model = genai.GenerativeModel("gemini-2.5-flash")
                 prompt = f"""אתה פרופסור בכיר למשפט עסקי וחשבונאות, המתמחה בהכנה למבחני מועצת רואי החשבון בישראל.
 
 כתוב שיעור מקיף ומעמיק ברמה אקדמית גבוהה בנושא: **{selected_sub}** (חלק מנושא: {selected_topic}).
