@@ -1,4 +1,4 @@
-# exam_progress.py | Version: v5.14
+# exam_progress.py | Version: v5.15
 
 import streamlit as st
 import time
@@ -133,7 +133,7 @@ def render_exam_progress(logo_tag):
         </div>
     </div>
     <div class="exam-clock-mobile">
-        <div class="exam-clock-wrap">
+        <div style="display:flex; justify-content:center; align-items:baseline; gap:10px;">
             <span id="exam-clock-display-mobile" class="exam-clock-val">--:--</span>
             <span class="exam-clock-label">דק'</span>
         </div>
