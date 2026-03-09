@@ -93,8 +93,8 @@ def render_exam_progress(logo_tag):
     }}
     .exam-subject-line {{ font-size:1.3rem; font-weight:700; color:#222; }}
     .exam-clock-val {{ font-size:1.495rem; font-weight:800; letter-spacing:3px; color:#222; }}
-    .exam-clock-wrap {{ display:flex; flex-direction:column; align-items:center; line-height:1; }}
-    .exam-clock-label {{ font-size:0.65rem; font-weight:500; color:#888; letter-spacing:1px; margin-top:1px; }}
+    .exam-clock-wrap {{ display:flex; flex-direction:row; align-items:baseline; gap:4px; }}
+    .exam-clock-label {{ font-size:0.65rem; font-weight:400; color:#999; }}
     @media (max-width:768px) {{
         .exam-clock-val {{ font-size:1.1rem; }}
         .exam-clock-label {{ font-size:0.55rem; }}
@@ -126,7 +126,6 @@ def render_exam_progress(logo_tag):
         </div>
         <div class="exam-top-row2">
             <div class="exam-subject-line">בחינה: {subject}</div>
-            <span id="exam-clock-display" class="exam-clock-val">--:--</span>
             <div class="exam-clock-wrap">
                 <span id="exam-clock-display" class="exam-clock-val">--:--</span>
                 <span class="exam-clock-label">דק'</span>
