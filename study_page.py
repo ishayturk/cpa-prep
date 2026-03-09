@@ -1,4 +1,4 @@
-# study_page.py | Version: v4.8
+# study_page.py | Version: v4.9
 
 import streamlit as st
 import google.generativeai as genai
@@ -142,7 +142,7 @@ def render_study(logo_tag):
         else:
             st.markdown(clean_lesson(st.session_state.get("lesson_txt", "")))
 
-            if st.session_state.get("show_quiz"):
+            if st.session_state.get("show_quiz") and not st.session_state.get("is_loading"):
                 _render_inline_quiz()
 
             quiz_open = st.session_state.get("show_quiz", False)
