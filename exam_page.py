@@ -24,6 +24,18 @@ EXAM_QUESTIONS_DEFAULT = 40
 EXAM_MINUTES_DEFAULT = 120
 
 
+def minutes_to_text(minutes):
+    """ממיר דקות לטקסט קריא בעברית. לדוגמה: 120 → 'שעתיים', 215 → 'שלוש שעות ו-35 דקות'"""
+    hours = minutes // 60
+    mins = minutes % 60
+    hour_words = {1: "שעה", 2: "שעתיים", 3: "שלוש שעות", 4: "ארבע שעות",
+                  5: "חמש שעות", 6: "שש שעות"}
+    hour_str = hour_words.get(hours, f"{hours} שעות")
+    if mins == 0:
+        return hour_str
+    return f"{hour_str} ו-{mins} דקות"
+
+
 def render_exam_topic(logo_tag):
     st.markdown('<div class="wrap">', unsafe_allow_html=True)
     render_top_bar(logo_tag)
@@ -65,7 +77,7 @@ def render_exam_instructions(logo_tag):
     st.markdown(f"""
 **מבנה הבחינה:**
 - מספר שאלות: {exam_questions}
-- זמן הבחינה: {exam_minutes} דקות
+- זמן הבחינה: {exam_minutes} דקות, {minutes_to_text(exam_minutes)}
 - כל שאלה כוללת 4 תשובות אפשריות, רק אחת נכונה
 
 **ניווט בבחינה:**
