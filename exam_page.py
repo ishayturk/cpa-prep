@@ -1,7 +1,7 @@
-# exam_page.py | Version: v1.3
+# exam_page.py | Version: v1.4
 
 import streamlit as st
-from utils import render_top_bar, EXAM_FILES
+from utils import render_top_bar, EXAM_FILES, EXAM_OVERRIDES
 
 EXAM_SUBJECTS = [
     "תמחור וחשבונאות ניהולית מתקדמת",
@@ -20,8 +20,8 @@ EXAM_SUBJECTS = [
     "יסודות ביקורת החשבונות",
 ]
 
-EXAM_QUESTIONS = 40
-EXAM_MINUTES = 120
+EXAM_QUESTIONS_DEFAULT = 40
+EXAM_MINUTES_DEFAULT = 120
 
 
 def render_exam_topic(logo_tag):
@@ -55,12 +55,17 @@ def render_exam_instructions(logo_tag):
     render_top_bar(logo_tag)
 
     subject = st.session_state.get("exam_subject", "")
+
+    # קריאת זמן — דיפולט 120 אם הנושא לא מופיע ב-EXAM_OVERRIDES
+    exam_minutes = EXAM_OVERRIDES.get(subject, {}).get("duration_minutes", EXAM_MINUTES_DEFAULT)
+    exam_questions = EXAM_QUESTIONS_DEFAULT  # תמיד 40
+
     st.markdown(f"### הוראות בחינה — {subject}")
 
     st.markdown(f"""
 **מבנה הבחינה:**
-- מספר שאלות: {EXAM_QUESTIONS}
-- זמן הבחינה: {EXAM_MINUTES} דקות
+- מספר שאלות: {exam_questions}
+- זמן הבחינה: {exam_minutes} דקות
 - כל שאלה כוללת 4 תשובות אפשריות, רק אחת נכונה
 
 **ניווט בבחינה:**
@@ -93,8 +98,6 @@ def render_exam_instructions(logo_tag):
             st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
-
-# סוף קובץ
 
 
 def render_exam_feedback(logo_tag):
@@ -189,7 +192,6 @@ def render_exam_feedback(logo_tag):
 
     st.markdown("---")
     if st.button("חזרה לתפריט הראשי"):
-        # שמור איזה קובץ השתמשנו — כדי לא לחזור עליו בפעם הבאה
         subject = st.session_state.get("exam_subject", "")
         used_file = st.session_state.get("exam_file")
         if subject and used_file:
