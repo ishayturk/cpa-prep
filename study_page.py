@@ -1,4 +1,4 @@
-# study_page.py | Version: v4.6
+# study_page.py | Version: v4.7
 
 import streamlit as st
 import google.generativeai as genai
@@ -200,12 +200,14 @@ def render_study(logo_tag):
     .scroll-top-btn {
         position: fixed; bottom: 32px; left: 150px; z-index: 9999;
         width: 46px; height: 46px; border-radius: 50%;
-        background: rgba(170,170,170,0.85); color: #fff;
-        border: none; cursor: pointer; display: flex;
+        background: rgba(30,60,114,0.75);
+        border: 1px solid rgba(255,255,255,0.2);
+        cursor: pointer; display: flex;
         align-items: center; justify-content: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25); text-decoration: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-decoration: none;
+        backdrop-filter: blur(4px);
     }
-    .scroll-top-btn:hover { background: rgba(130,130,130,0.95); }
+    .scroll-top-btn:hover { background: rgba(30,60,114,0.95); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
     @media (max-width:768px) { .scroll-top-btn { left: 16px; bottom: 24px; } }
     </style>
     <a class="scroll-top-btn" href="#top">
