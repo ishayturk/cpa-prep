@@ -1,4 +1,4 @@
-# study_page.py | Version: v4.5
+# study_page.py | Version: v4.6
 
 import streamlit as st
 import google.generativeai as genai
@@ -194,6 +194,26 @@ def render_study(logo_tag):
                     st.session_state.page = "welcome"
                     st.rerun()
                 st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown("""
+    <style>
+    .scroll-top-btn {
+        position: fixed; bottom: 32px; left: 150px; z-index: 9999;
+        width: 46px; height: 46px; border-radius: 50%;
+        background: rgba(170,170,170,0.85); color: #fff;
+        border: none; cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25); text-decoration: none;
+    }
+    .scroll-top-btn:hover { background: rgba(130,130,130,0.95); }
+    @media (max-width:768px) { .scroll-top-btn { left: 16px; bottom: 24px; } }
+    </style>
+    <a class="scroll-top-btn" href="#top">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </a>
+    """, unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
