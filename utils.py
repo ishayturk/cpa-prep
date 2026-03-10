@@ -1,4 +1,4 @@
-# utils.py | Version: v2.7
+# utils.py | Version: v2.8
 
 import streamlit as st
 import smtplib
@@ -107,6 +107,7 @@ EXAM_FILES = {
     "דיני תאגידים ומסחר": ["corporation_01.json"],
     "תמחור וחשבונאות ניהולית מתקדמת": ["advanced_pricing_01.json"],
     "דיני מיסים א'": ["taxes_a_01.json"],
+    "דיני מיסים ב'": ["taxes_b_01.json"],
     "סטטיסטיקה": ["statistics_01.json"],
     "מבוא לחשבונאות": ["accounting_01.json"],
     "מימון": ["funding_01.json"],
