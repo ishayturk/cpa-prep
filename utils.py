@@ -1,4 +1,4 @@
-# utils.py | Version: v2.8
+# utils.py | Version: v2.10
 
 import streamlit as st
 import smtplib
@@ -108,6 +108,7 @@ EXAM_FILES = {
     "תמחור וחשבונאות ניהולית מתקדמת": ["advanced_pricing_01.json"],
     "דיני מיסים א'": ["taxes_a_01.json"],
     "דיני מיסים ב'": ["taxes_b_01.json"],
+    "ביקורת חשבונות ובעיות ביקורת מורכבות": ["audit_01.json"],
     "סטטיסטיקה": ["statistics_01.json"],
     "מבוא לחשבונאות": ["accounting_01.json"],
     "מימון": ["funding_01.json"],
@@ -122,6 +123,7 @@ EXAM_FILES = {
 EXAM_OVERRIDES = {
     "מימון": {"duration_minutes": 215},
     "חשבונאות פיננסית מתקדמת": {"duration_minutes": 200},
+    "ביקורת חשבונות ובעיות ביקורת מורכבות": {"duration_minutes": 150},
 }
 
 import os as _os
